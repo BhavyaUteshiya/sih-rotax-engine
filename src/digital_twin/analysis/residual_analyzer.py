@@ -25,6 +25,11 @@ class ResidualAnalyzer:
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml") -> None:
         self.config_path = config_path
         self.thresholds = self._load_thresholds(config_path)
+        
+        # Debounce filter state
+        # engine_id -> { parameter_name -> timestamp_of_first_violation }
+        self.violation_start_times: Dict[str, Dict[str, float]] = {}
+        self.debounce_time_sec: float = 2.0  # Require 2 continuous seconds to flag as a warning
 
     def _load_thresholds(self, filepath: str) -> Dict[str, float]:
         """Loads residual threshold values from YAML configuration file."""
@@ -72,12 +77,17 @@ class ResidualAnalyzer:
     def analyze(self, expected: ExpectedState, observed: ObservedState) -> ResidualState:
         """
         Computes ParameterResidual objects for all 18 authoritative internal parameters and aggregates into ResidualState.
+        Applies a debounce filter to suppress instantaneous transient warnings.
         """
         res_state = ResidualState(
             timestamp=observed.timestamp,
             sequence_number=observed.sequence_number,
             engine_id=observed.engine_id
         )
+        
+        engine_id = observed.engine_id
+        if engine_id not in self.violation_start_times:
+            self.violation_start_times[engine_id] = {}
 
         mappings = [
             ("rpm", expected.rpm, observed.rpm, self.thresholds.get("rpm", 100.0), "RPM"),
@@ -109,6 +119,23 @@ class ResidualAnalyzer:
                 unit=unit,
                 timestamp=observed.timestamp
             )
+            
+            # Apply debounce logic for transient handling
+            if res.warning_triggered:
+                if name not in self.violation_start_times[engine_id]:
+                    # Record the exact simulation time the violation began
+                    self.violation_start_times[engine_id][name] = observed.timestamp
+                
+                # Check if the violation has persisted long enough
+                duration = observed.timestamp - self.violation_start_times[engine_id][name]
+                if duration < self.debounce_time_sec:
+                    # Suppress the instantaneous warning for legitimate transients
+                    res.warning_triggered = False
+            else:
+                # If within threshold, clear any tracked violation start time
+                if name in self.violation_start_times[engine_id]:
+                    del self.violation_start_times[engine_id][name]
+                    
             res_state.add_residual(res)
 
         return res_state

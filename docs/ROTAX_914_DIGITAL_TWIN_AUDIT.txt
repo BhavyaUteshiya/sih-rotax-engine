@@ -1,0 +1,88 @@
+================================================================================
+ROTAX 914 DIGITAL TWIN AUDIT REPORT
+================================================================================
+
+1. AUDIT METADATA
+--------------------------------------------------
+Date/Time: 2026-09-01 20:45:00+05:30
+Commit Examined: Baseline commit prior to Digital Twin integration fixes (local main branch)
+
+2. DISCOVERED ARCHITECTURE & DATA FLOW
+--------------------------------------------------
+The architecture cleanly adheres to the separation of concerns between physical simulation (Module 01) and the Twin (Module 03).
+Flow:
+Dashboard external inputs
+        ↓ (app/server.py routes /api/run to simulator.step_thermodynamic_cycle)
+Physical Engine Model (Module 01)
+        ↓
+Internal / emergent engine parameters (Module 01 simulation state)
+        ↓
+Telemetry (Module 02 Telemetry Encoder & Transport)
+        ↓
+Digital Twin Expected State (Extracted directly from Module 01 state)
+Digital Twin Observed State (Ingested from Module 02 telemetry buffers)
+        ↓
+Residuals (Calculated in ResidualAnalyzer: Observed - Expected)
+        ↓
+Causal Analysis (Physical DAG tracing primary vs. propagated deviations)
+        ↓
+Warning / Status (DigitalTwinEngine aggregates statuses)
+
+3. COMPONENT AUDIT RESULTS
+--------------------------------------------------
+A. Expected State Implementation:
+- Implemented in `src/digital_twin/physics/expected_behavior.py`.
+- Status: Logically correct. Strictly derives from Module 01 states. Does NOT copy telemetry.
+- Evaluates transients (e.g., turbo_boost_val = map_val - amb_press_val).
+
+B. Observed State Implementation:
+- Implemented in `src/digital_twin/models/observed_state.py`.
+- Status: Logically correct. Ingests normalized telemetry strictly from Module 02 pipeline. Does NOT fall back to Module 01.
+
+C. Residual Implementation:
+- Implemented in `src/digital_twin/analysis/residual_analyzer.py`.
+- Formula: `residual = observed - expected`.
+- Status: Correctly handles near-zero expectations (`abs(exp_val) > 1e-9`).
+
+D. Transient Handling (PROBLEM DISCOVERED):
+- Implementation was purely instantaneous.
+- Problem: If the physical turbocharger lags telemetry (legitimate transient behavior), the instantaneous deviation exceeded thresholds, throwing an immediate false warning.
+- Fix Implemented: Introduced a stateful debounce filter (`self.violation_start_times` and `self.debounce_time_sec = 2.0`) in `ResidualAnalyzer`. Validated via runtime script.
+
+E. Synchronization & Warning Implementation:
+- `DigitalTwinEngine` properly evaluates thresholds driven by `configs/digital_twin_config.yaml`.
+- Warnings are correctly generated only when `ResidualAnalyzer` confirms a debounced deviation.
+
+F. Causal Analysis Implementation:
+- Implemented in `src/digital_twin/analysis/causal_analyzer.py`.
+- Status: Physically sound DAG. Accurately traces physical relations (e.g., Throttle -> MAP -> Airflow).
+- Distinguishes `PRIMARY_DEVIATION` from `PROPAGATED_DEVIATION`.
+
+G. E1 / E2 Handling:
+- Implemented in `twin_engine.py`.
+- Status: Engine 1 and Engine 2 states and warnings are stored in independent dictionaries. Safe from cross-contamination.
+
+H. Data Quality Handling:
+- Implemented in `observed_state.py`.
+- Checks for sensor presence (GOOD > 3 sensors, DEGRADED > 1 sensor, INSUFFICIENT_DATA otherwise).
+
+4. IMPLEMENTED CHANGES
+--------------------------------------------------
+1. Initialized Git repository and created `.gitignore` to protect source and prevent secrets leakage.
+2. Modified `src/digital_twin/analysis/residual_analyzer.py` to add a 2.0-second debounce tracking mechanism `violation_start_times`.
+3. Adjusted `ParameterResidual.compute` usage to respect the debounce logic and suppress false warnings caused by normal transient physics.
+
+5. BASIC VALIDATION PERFORMED
+--------------------------------------------------
+Backend and APIs were tested locally using a custom `test_transients.py` automation script.
+- Backend Starts: YES
+- Simulation Initializes: YES
+- Telemetry Generated: YES
+- Digital Twin Receives Telemetry: YES
+- Debounce Filter Active: YES (Initial throttle spikes did NOT trigger false warnings).
+- Warnings Trigger After Debounce: YES (Verified manually across 15 clock ticks).
+
+6. REMAINING LIMITATIONS
+--------------------------------------------------
+- Advanced structural wear (e.g., bearing degradation) is stubbed in the dashboard but not fully integrated into the Twin causal analysis DAG.
+- Residual thresholds are static in YAML. Dynamic thresholds based on flight envelope could be added in future versions.

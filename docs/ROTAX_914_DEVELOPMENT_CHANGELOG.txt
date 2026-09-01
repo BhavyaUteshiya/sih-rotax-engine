@@ -1,0 +1,4 @@
+| Date | File | Change | Reason | Previous Behavior | New Behavior | Source/Justification | Validation |
+|---|---|---|---|---|---|---|---|
+| 2026-09-01 | `.gitignore` | Created ignore file | Prevent caching, virtual environments, and secrets from being committed. | None | Protects local files | Standard engineering practice | Verified via git status |
+| 2026-09-01 | `src/digital_twin/analysis/residual_analyzer.py` | Added 2-second debounce filter | Suppress false warnings caused by normal transient turbo lag. | Warnings generated instantly when threshold exceeded | Warnings generated only if deviation persists for >2.0s | Logical robustness (Phase 3 Audit requirement) | `test_transients.py` script |
