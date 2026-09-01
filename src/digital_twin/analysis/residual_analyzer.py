@@ -79,9 +79,11 @@ class ResidualAnalyzer:
         except Exception:
             return defaults
 
-    def _load_hard_limits(self, filepath: str) -> Dict[str, float]:
-        """Loads maximum physical operating safety limits from engine configuration to bypass debounce."""
-        limits = {}
+    def _load_hard_limits(self, filepath: str) -> Dict[str, Dict[str, float]]:
+        """Loads physical operating safety limits from engine configuration to bypass debounce. Returns dict of max_limits and min_limits."""
+        max_limits = {}
+        min_limits = {}
+        limits = {"max": max_limits, "min": min_limits}
         if not os.path.exists(filepath):
             return limits
             
@@ -92,25 +94,33 @@ class ResidualAnalyzer:
             # Extract applicable hard limits. E.g. max_takeoff_rpm
             pp = cfg.get("power_and_performance", {})
             if "rated_rpm" in pp:
-                limits["rpm"] = float(pp["rated_rpm"].get("value", 5800.0))
+                max_limits["rpm"] = float(pp["rated_rpm"].get("value", 5800.0))
                 
             turbo = cfg.get("turbocharger", {})
             if "max_manifold_absolute_pressure_pa" in turbo:
-                limits["map_bar"] = float(turbo["max_manifold_absolute_pressure_pa"].get("value", 132000.0)) / 100000.0
+                max_limits["map_bar"] = float(turbo["max_manifold_absolute_pressure_pa"].get("value", 132000.0)) / 100000.0
             if "max_turbo_speed_rpm" in turbo:
-                limits["turbo_rpm"] = float(turbo["max_turbo_speed_rpm"].get("value", 140000.0))
+                max_limits["turbo_rpm"] = float(turbo["max_turbo_speed_rpm"].get("value", 140000.0))
                 
             thermal = cfg.get("thermal", {})
             if "max_safe_cht_k" in thermal:
-                limits["cht_c"] = float(thermal["max_safe_cht_k"].get("value", 408.15)) - 273.15
+                max_limits["cht_c"] = float(thermal["max_safe_cht_k"].get("value", 408.15)) - 273.15
             if "max_safe_egt_k" in thermal:
-                limits["egt_c"] = float(thermal["max_safe_egt_k"].get("value", 1223.15)) - 273.15
+                max_limits["egt_c"] = float(thermal["max_safe_egt_k"].get("value", 1223.15)) - 273.15
             if "max_safe_oil_temp_k" in thermal:
-                limits["oil_temp_c"] = float(thermal["max_safe_oil_temp_k"].get("value", 403.15)) - 273.15
+                max_limits["oil_temp_c"] = float(thermal["max_safe_oil_temp_k"].get("value", 403.15)) - 273.15
+            # Missing from original yaml parsing, but standard for Rotax 914
+            # We'll use 120 C / 393.15 K if explicitly added to yaml, otherwise we'll assume from the manual
+            if "max_safe_coolant_temp_k" in thermal:
+                max_limits["coolant_temp_c"] = float(thermal["max_safe_coolant_temp_k"].get("value", 393.15)) - 273.15
+            else:
+                max_limits["coolant_temp_c"] = 120.0
                 
             lube = cfg.get("lubrication", {})
             if "max_oil_pressure_pa" in lube:
-                limits["oil_pressure_bar"] = float(lube["max_oil_pressure_pa"].get("value", 700000.0)) / 100000.0
+                max_limits["oil_pressure_bar"] = float(lube["max_oil_pressure_pa"].get("value", 700000.0)) / 100000.0
+            if "min_oil_pressure_pa" in lube:
+                min_limits["oil_pressure_bar"] = float(lube["min_oil_pressure_pa"].get("value", 80000.0)) / 100000.0
                 
             return limits
         except Exception:
@@ -169,9 +179,15 @@ class ResidualAnalyzer:
             if res.warning_triggered:
                 # Severe/hard-limit bypass check
                 bypass_debounce = False
-                if name in self.hard_limits:
-                    # If observed exceeds the safety limit, this is a severe violation, skip debounce
-                    if obs_val >= self.hard_limits[name]:
+                
+                # Check upper limit
+                if name in self.hard_limits.get("max", {}):
+                    if obs_val >= self.hard_limits["max"][name]:
+                        bypass_debounce = True
+                        
+                # Check lower limit
+                if name in self.hard_limits.get("min", {}):
+                    if obs_val <= self.hard_limits["min"][name]:
                         bypass_debounce = True
                 
                 if bypass_debounce or cfg["debounce_sec"] <= 0.0:

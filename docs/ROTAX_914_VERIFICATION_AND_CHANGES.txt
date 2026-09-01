@@ -81,3 +81,34 @@ The user identified that a universal definition of "major deviation" or a unifor
 3. VALIDATION
 - Extended validation tests (`test_parameter_debounce.py`) to confirm that different parameters behave correctly according to their specifically assigned debounce periods (e.g. a parameter configured with a 5.0s debounce does not trigger until 5s, while a parameter with a 1.0s debounce triggers earlier).
 - Verified previous test suite (`test_hard_limit.py`) remained unbroken and that hard-limits continue to bypass the parameter-specific debounce correctly.
+
+==================================================
+PHASE 6: OPERATING LIMITS AND RESIDUAL TOLERANCES
+==================================================
+
+1. ISSUE IDENTIFIED
+The integration required aligning the residual-tolerance system and safety limits with verified Rotax 914 authoritative data. Previous checks only bypassed debounce for upper limits, ignoring lower physical limits. 
+
+2. AUDIT FINDINGS
+- Expected vs Actual Simulation Residual Tolerances: No Rotax authoritative documentation exists specifying simulation residual tolerances. Thus, all 18 parameters remain classified as ESTIMATED and use ABSOLUTE thresholds with a 2.0s debounce.
+- Verified physical operating limits from rotax_914.yaml dictate boundaries, not modeling tolerance.
+
+3. RESOLUTION
+- Updated ResidualAnalyzer._load_hard_limits() to explicitly parse both max_limits and min_limits (e.g. min_oil_pressure_pa).
+- Updated the severe violation bypass check to trigger immediately on both UPPER limits (observed >= max_limit) and LOWER limits (observed <= min_limit).
+- Added max_safe_coolant_temp_k parsing logic.
+
+4. VALIDATED HARD LIMITS
+| Parameter        | Min Limit | Max Limit | Source Classification |
+|------------------|-----------|-----------|-----------------------|
+| rpm              | -         | 5800.0    | VERIFIED              |
+| map_bar          | -         | 1.32      | VERIFIED              |
+| cht_c            | -         | 135.0     | VERIFIED              |
+| egt_c            | -         | 950.0     | VERIFIED              |
+| oil_temp_c       | -         | 130.0     | VERIFIED              |
+| oil_pressure_bar | 0.8       | 7.0       | VERIFIED              |
+| coolant_temp_c   | -         | 120.0     | VERIFIED              |
+| turbo_rpm        | -         | 140000.0  | ESTIMATED/DERIVED     |
+
+5. VALIDATION
+- Extended test_hard_limit.py to ensure that violating a lower limit triggers the warning instantaneously, correctly bypassing the 2.0s transient debounce timer.
