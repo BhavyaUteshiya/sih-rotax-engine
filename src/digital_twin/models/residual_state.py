@@ -23,6 +23,7 @@ class ParameterResidual:
     quality: str = "VALID"  # VALID, MISSING, INVALID_NAN, INVALID_INF
     warning_triggered: bool = False
     threshold: Optional[float] = None
+    tolerance_type: str = "ABSOLUTE"
     unit: str = ""
     timestamp: float = 0.0
 
@@ -33,6 +34,7 @@ class ParameterResidual:
         expected: Optional[float],
         observed: Optional[float],
         threshold: Optional[float] = None,
+        tolerance_type: str = "ABSOLUTE",
         unit: str = "",
         timestamp: float = 0.0
     ) -> "ParameterResidual":
@@ -47,6 +49,7 @@ class ParameterResidual:
                 quality="MISSING",
                 warning_triggered=False,
                 threshold=threshold,
+                tolerance_type=tolerance_type,
                 unit=unit,
                 timestamp=timestamp
             )
@@ -61,6 +64,7 @@ class ParameterResidual:
                 quality="INVALID_NAN",
                 warning_triggered=False,
                 threshold=threshold,
+                tolerance_type=tolerance_type,
                 unit=unit,
                 timestamp=timestamp
             )
@@ -75,6 +79,7 @@ class ParameterResidual:
                 quality="INVALID_INF",
                 warning_triggered=False,
                 threshold=threshold,
+                tolerance_type=tolerance_type,
                 unit=unit,
                 timestamp=timestamp
             )
@@ -89,8 +94,13 @@ class ParameterResidual:
             rel_err = 0.0
 
         warning = False
-        if threshold is not None and abs(res) > threshold:
-            warning = True
+        if threshold is not None:
+            if tolerance_type.upper() == "RELATIVE":
+                if abs(rel_err) > threshold:
+                    warning = True
+            else:
+                if abs(res) > threshold:
+                    warning = True
 
         return cls(
             parameter=parameter,
@@ -101,6 +111,7 @@ class ParameterResidual:
             quality="VALID",
             warning_triggered=warning,
             threshold=threshold,
+            tolerance_type=tolerance_type,
             unit=unit,
             timestamp=timestamp
         )

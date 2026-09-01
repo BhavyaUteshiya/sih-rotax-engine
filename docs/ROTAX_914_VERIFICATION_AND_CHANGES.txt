@@ -65,3 +65,19 @@ Created a unit test to validate Conditions A, B, C, and D:
 4. END OF INTEGRATION
 The Rotax 914 Digital Twin Integration is complete.
 
+
+==================================================
+PHASE 5: PARAMETER-SPECIFIC TOLERANCES & DEBOUNCE
+==================================================
+
+1. ISSUE IDENTIFIED
+The user identified that a universal definition of "major deviation" or a uniform 2.0s debounce timer for all engine parameters is flawed, as different parameters have different scales, limits, and acceptable transient behaviors.
+
+2. RESOLUTION
+- Updated `configs/digital_twin_config.yaml` to structurally support parameter-specific tolerances (e.g., `ABSOLUTE` vs `RELATIVE`) and parameter-specific `debounce_sec`. By default, existing absolute values and a 2.0s debounce are preserved to maintain backward compatibility, ensuring calibration requirements are highlighted.
+- Updated `ParameterResidual` in `src/digital_twin/models/residual_state.py` to accept `tolerance_type` and compute warnings accurately against absolute residuals or relative percentages.
+- Refactored `ResidualAnalyzer.analyze()` in `src/digital_twin/analysis/residual_analyzer.py` to pull parameter-specific tolerances and debounce periods from the configuration, applying them independently per parameter while preserving hard-limit bypass logic.
+
+3. VALIDATION
+- Extended validation tests (`test_parameter_debounce.py`) to confirm that different parameters behave correctly according to their specifically assigned debounce periods (e.g. a parameter configured with a 5.0s debounce does not trigger until 5s, while a parameter with a 1.0s debounce triggers earlier).
+- Verified previous test suite (`test_hard_limit.py`) remained unbroken and that hard-limits continue to bypass the parameter-specific debounce correctly.
