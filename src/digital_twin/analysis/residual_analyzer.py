@@ -22,7 +22,7 @@ class ResidualAnalyzer:
     oil_pressure_bar, turbo_boost_bar, gearbox_rpm, propeller_load_nm, thrust_n.
     """
 
-    def __init__(self, config_path: str = "configs/digital_twin_config.yaml") -> None:
+    def __init__(self, config_path: str = "configs/digital_twin_config.yaml", engine_config_path: str = "configs/module02/engines/rotax_914.yaml") -> None:
         self.config_path = config_path
         self.thresholds = self._load_thresholds(config_path)
         
@@ -30,6 +30,9 @@ class ResidualAnalyzer:
         # engine_id -> { parameter_name -> timestamp_of_first_violation }
         self.violation_start_times: Dict[str, Dict[str, float]] = {}
         self.debounce_time_sec: float = 2.0  # Require 2 continuous seconds to flag as a warning
+
+        # Hard limits from physical engine config to bypass debounce
+        self.hard_limits = self._load_hard_limits(engine_config_path)
 
     def _load_thresholds(self, filepath: str) -> Dict[str, float]:
         """Loads residual threshold values from YAML configuration file."""
@@ -73,6 +76,43 @@ class ResidualAnalyzer:
             return result
         except Exception:
             return defaults
+
+    def _load_hard_limits(self, filepath: str) -> Dict[str, float]:
+        """Loads maximum physical operating safety limits from engine configuration to bypass debounce."""
+        limits = {}
+        if not os.path.exists(filepath):
+            return limits
+            
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f)
+                
+            # Extract applicable hard limits. E.g. max_takeoff_rpm
+            pp = cfg.get("power_and_performance", {})
+            if "rated_rpm" in pp:
+                limits["rpm"] = float(pp["rated_rpm"].get("value", 5800.0))
+                
+            turbo = cfg.get("turbocharger", {})
+            if "max_manifold_absolute_pressure_pa" in turbo:
+                limits["map_bar"] = float(turbo["max_manifold_absolute_pressure_pa"].get("value", 132000.0)) / 100000.0
+            if "max_turbo_speed_rpm" in turbo:
+                limits["turbo_rpm"] = float(turbo["max_turbo_speed_rpm"].get("value", 140000.0))
+                
+            thermal = cfg.get("thermal", {})
+            if "max_safe_cht_k" in thermal:
+                limits["cht_c"] = float(thermal["max_safe_cht_k"].get("value", 408.15)) - 273.15
+            if "max_safe_egt_k" in thermal:
+                limits["egt_c"] = float(thermal["max_safe_egt_k"].get("value", 1223.15)) - 273.15
+            if "max_safe_oil_temp_k" in thermal:
+                limits["oil_temp_c"] = float(thermal["max_safe_oil_temp_k"].get("value", 403.15)) - 273.15
+                
+            lube = cfg.get("lubrication", {})
+            if "max_oil_pressure_pa" in lube:
+                limits["oil_pressure_bar"] = float(lube["max_oil_pressure_pa"].get("value", 700000.0)) / 100000.0
+                
+            return limits
+        except Exception:
+            return limits
 
     def analyze(self, expected: ExpectedState, observed: ObservedState) -> ResidualState:
         """
@@ -122,15 +162,28 @@ class ResidualAnalyzer:
             
             # Apply debounce logic for transient handling
             if res.warning_triggered:
-                if name not in self.violation_start_times[engine_id]:
-                    # Record the exact simulation time the violation began
-                    self.violation_start_times[engine_id][name] = observed.timestamp
+                # Severe/hard-limit bypass check
+                bypass_debounce = False
+                if name in self.hard_limits:
+                    # If observed exceeds the safety limit, this is a severe violation, skip debounce
+                    if obs_val >= self.hard_limits[name]:
+                        bypass_debounce = True
                 
-                # Check if the violation has persisted long enough
-                duration = observed.timestamp - self.violation_start_times[engine_id][name]
-                if duration < self.debounce_time_sec:
-                    # Suppress the instantaneous warning for legitimate transients
-                    res.warning_triggered = False
+                if bypass_debounce:
+                    # Clear any tracked start time since we are forcing it now
+                    if name in self.violation_start_times[engine_id]:
+                        del self.violation_start_times[engine_id][name]
+                    # warning_triggered remains True
+                else:
+                    if name not in self.violation_start_times[engine_id]:
+                        # Record the exact simulation time the violation began
+                        self.violation_start_times[engine_id][name] = observed.timestamp
+                    
+                    # Check if the violation has persisted long enough
+                    duration = observed.timestamp - self.violation_start_times[engine_id][name]
+                    if duration < self.debounce_time_sec:
+                        # Suppress the instantaneous warning for legitimate transients
+                        res.warning_triggered = False
             else:
                 # If within threshold, clear any tracked violation start time
                 if name in self.violation_start_times[engine_id]:

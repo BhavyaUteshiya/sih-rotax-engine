@@ -41,3 +41,27 @@ DigitalTwinEngine, MasterIntegrationRunner) were strictly preserved.
 ================================================================================
 END OF RECORD
 ================================================================================
+
+==================================================
+PHASE 4: SEVERE VIOLATION / HARD-LIMIT DEBOUNCE BYPASS
+==================================================
+
+1. ISSUE IDENTIFIED
+During the final verification audit, it was discovered that the 2.0-second debounce timer in ResidualAnalyzer suppressed ALL warnings equally, including severe deviations and critical hard-limit violations (e.g. RPM > 5800).
+
+2. RESOLUTION
+- Updated src/digital_twin/analysis/residual_analyzer.py to parse physical operating safety limits directly from configs/module02/engines/rotax_914.yaml
+- Implemented a severe violation check in ResidualAnalyzer.analyze().
+- If an observed value crosses a documented max operating limit (e.g., max_takeoff_rpm = 5800.0, max_safe_cht_k = 408.15K), the warning is flagged immediately (bypassing the 2.0s transient debounce timer).
+- Normal threshold excursions (e.g. RPM deviation of 150 but absolute RPM < 5800) continue to use the 2.0s debounce timer.
+
+3. VALIDATION
+Created a unit test to validate Conditions A, B, C, and D:
+- Condition A: Short transient (1.5s duration) triggers 0 warnings and properly clears tracking state.
+- Condition B: Persistent violation (>2.0s) properly triggers warnings after the debounce timer expires.
+- Condition C: Severe hard-limit violation (e.g. RPM=5850) triggers the warning instantaneously, bypassing the debounce timer.
+- Condition D: Engine 1 and Engine 2 maintain completely independent debounce and tracking states.
+
+4. END OF INTEGRATION
+The Rotax 914 Digital Twin Integration is complete.
+
