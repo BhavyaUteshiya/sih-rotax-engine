@@ -1,0 +1,26 @@
+# configs/acquisition_config.yaml
+# Module 01 Ingestion & Buffering Configuration (V4.3 Specification)
+
+pipeline:
+  schema_version: "1.0.0"
+  config_version: "1.0.0"
+  lateness_window_seconds: 0.5                  # Maximum allowable packet lateness for reordering
+  staleness_timeout_seconds: 5.0                # Timeout past which a value is marked STALE
+  default_sync_grid_hz: 50.0                   # Default consumer frame grid (20 ms interval)
+  causal_mode_default: true                     # Default to REALTIME_CAUSAL_MODE (no look-ahead)
+
+buffering:
+  max_ring_buffer_capacity: 10000              # Maximum sliding window ring buffer capacity
+  backpressure_drop_policy: "DROP_OLDEST"       # RingBuffer drop policy on overflow
+  emergency_storage_buffer_capacity: 50000     # Emergency buffer capacity during storage outages
+
+storage:
+  raw_store_path: "storage/raw_store.jsonl"
+  normalized_store_path: "storage/normalized_store.jsonl"
+  flush_batch_size: 100
+  flush_interval_seconds: 1.0
+  max_raw_loss_engineering_parameter: 0.0       # Target raw data loss under normal storage availability
+
+observability:
+  enable_structured_json_logging: true
+  metrics_reset_on_startup: true

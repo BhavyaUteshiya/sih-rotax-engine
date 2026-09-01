@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+tf_env/
+
+# Pytest / Testing caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating system files
+.DS_Store
+__MACOSX/
+Thumbs.db
+
+# Storage outputs
+storage/*.jsonl
+cache/
+build/
+
+# Secrets
+.env
+secrets/
+credentials/
+
+# IDE
+.vscode/
+.idea/

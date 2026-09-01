@@ -1,0 +1,61 @@
+================================================================================
+ROTAX 914 ENGINE DATA - FINAL VERIFIED SPECIFICATION
+================================================================================
+Project: SIH Digital Twin Simulator
+Source Authority: EASA TCDS E.122 / BRP-Rotax Datasheet Vers. 2021/01
+================================================================================
+
+--- GENERAL --------------------------------------------------------------------
+Engine Type: 4-Stroke, horizontally opposed, turbocharged
+Cylinders: 4
+Displacement: 1211.2 cm³ (0.0012112 m³)
+Compression Ratio: 9.0 : 1
+Bore: 79.5 mm (0.0795 m)
+Stroke: 61.0 mm (0.061 m)
+Weight (Dry): 71.7 kg
+
+--- PERFORMANCE RATINGS --------------------------------------------------------
+Takeoff Power: 84.5 kW (115 hp) @ 5800 RPM (max 5 minutes)
+Continuous Power: 73.5 kW (100 hp) @ 5500 RPM
+Max Engine Torque: 144 Nm @ 4900 RPM
+Takeoff Target MAP: 1320 hPa (132000 Pa)
+Max Continuous MAP: 1180 hPa (118000 Pa)
+Idle RPM: 1400 - 1800 RPM (Default: 1400)
+
+--- THERMAL & LIMITS -----------------------------------------------------------
+Max Safe CHT: 135 °C (408.15 K)
+Max Coolant Temp: 120 °C (393.15 K)
+Max Safe Oil Temp: 130 °C (403.15 K)
+EGT Limit: 950 °C (1223.15 K) (Estimated safe limit based on Rotax specs)
+
+--- LUBRICATION ----------------------------------------------------------------
+Min Oil Pressure: 0.8 bar (80000 Pa) (< 3500 RPM)
+Normal Oil Pressure: 2.0 to 5.0 bar (200000 - 500000 Pa) (> 3500 RPM)
+Max Oil Pressure: 7.0 bar (700000 Pa) (Cold start only)
+Oil Mass / Capacity: 3.0 L (Approx 2.5 kg)
+
+--- FUEL SYSTEM ----------------------------------------------------------------
+Fuel Pressure Min: 0.15 bar (15000 Pa) differential
+Fuel Pressure Normal: 0.25 bar (25000 Pa) differential
+Max Fuel Pressure: 0.35 bar (35000 Pa) differential
+Max Fuel Flow (Takeoff): 32.5 L/h (Approx 23.4 kg/h)
+Idle Fuel Flow: Approx 1.8 L/h (Approx 1.3 kg/h)
+Lower Heating Value (LHV): 43.4 MJ/kg (Estimated / Baseline)
+
+--- DRIVETRAIN / PROP ----------------------------------------------------------
+Engine to Prop Speed Ratio: 0.41175986 (1 / 2.4286)
+Propeller Diameter: 1.7 m (Synthetic / Calibration)
+
+--- SIMULATION / DERIVED PARAMETERS --------------------------------------------
+Rotational Inertia: 0.15 kg.m² (Estimated)
+Max Compressor PR: 2.15 (Derived)
+Compressor Eff Peak: 0.75 (Estimated)
+Lag Time Constant (Tau): 0.5 s (Estimated)
+Indicated Efficiency Peak: 0.30 (Estimated)
+Gearbox Efficiency: 0.97 (Estimated)
+Prop Torque Coeff (Cq): 0.0125 (Synthetic)
+Prop Thrust Coeff (Ct): 0.075 (Synthetic)
+
+================================================================================
+END OF DOCUMENT
+================================================================================

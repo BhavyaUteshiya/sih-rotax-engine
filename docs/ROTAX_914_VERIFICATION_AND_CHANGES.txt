@@ -1,0 +1,43 @@
+================================================================================
+ROTAX 914 VERIFICATION AND CHANGES RECORD
+================================================================================
+Date: 2026-09-01
+Phase: INTEGRATION AND VERIFICATION
+
+--- 1. VERIFICATION SUMMARY ----------------------------------------------------
+The Rotax 914 Engineering Specification has been cross-referenced with the 
+existing simulation configuration. The following mappings and classifications 
+have been finalized:
+
+| Parameter                       | Original Value    | New Value        | Classification | Reason / Source                                      |
+|---------------------------------|-------------------|------------------|----------------|------------------------------------------------------|
+| takeoff_rated_power_hp          | 115.0             | 115.0            | OFFICIAL       | Validated from spec (115 hp class)                   |
+| max_safe_oil_temp_k             | 383.15 K          | 403.15 K         | VERIFIED       | Spec states 130 °C (403.15 K)                        |
+| engine_to_propeller_speed_ratio | 0.411522...       | 0.41175986       | VERIFIED       | 1 / 2.4286 exact ratio                               |
+| lower_heating_value_j_kg        | 44000000.0 J/kg   | 43400000.0 J/kg  | ESTIMATED      | 43.4 MJ/kg baseline estimate                         |
+| idle_fuel_flow_kg_h             | 1.8 kg/h          | 1.3 kg/h         | ESTIMATED      | Based on 1.8 L/h with density ~0.72 kg/L             |
+| max_fuel_flow_kg_h              | 18.5 kg/h         | 23.4 kg/h        | ESTIMATED      | Based on 32.5 L/h with density ~0.72 kg/L            |
+| max_compressor_pressure_ratio   | 1.55              | 2.15             | DERIVED        | PR envelope max at altitude                          |
+| indicated_efficiency_peak       | 0.42              | 0.30             | ESTIMATED      | Adapted to physically plausible boundary             |
+| compressor_efficiency_peak      | 0.76              | 0.75             | ESTIMATED      | Refined turbocharger map estimation                  |
+| lag_tau_s                       | 0.8 s             | 0.5 s            | ESTIMATED      | Engineering judgement for spool up                   |
+| rotational_inertia_kg_m2        | 0.12 kg.m²        | 0.15 kg.m²       | ESTIMATED      | Reduced-order model update                           |
+| gearbox_efficiency              | 0.98              | 0.97             | ESTIMATED      | Efficiency assumption                                |
+| propeller.diameter_m            | 1.9 m             | 1.7 m            | SYNTHETIC      | Calibration default                                  |
+| propeller.torque_coefficient_cq | 0.0065            | 0.0125           | SYNTHETIC      | Calibration default                                  |
+| propeller.thrust_coefficient_ct | 0.085             | 0.075            | SYNTHETIC      | Calibration default                                  |
+
+All other parameters matching the verified standard have been audited and 
+found correct according to the canonical specification.
+
+--- 2. INTEGRATION CHANGES -----------------------------------------------------
+The above parameter changes have been strictly applied to:
+- configs/module02/engines/rotax_914.yaml
+
+No internal simulation physics engines, models, or algorithms were altered.
+The application architecture and existing integration points (i.e. FastAPI backend,
+DigitalTwinEngine, MasterIntegrationRunner) were strictly preserved.
+
+================================================================================
+END OF RECORD
+================================================================================

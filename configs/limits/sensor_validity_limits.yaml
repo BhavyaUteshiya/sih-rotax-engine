@@ -1,0 +1,122 @@
+# configs/limits/sensor_validity_limits.yaml
+# Tier 2 Physical Plausibility Range & Tier 6 Rate-of-Change Limits (Enforced by Module 01)
+# ⚠ REPRESENTATIVE DEMONSTRATION LIMITS — NOT ACTUAL DRDO / MALE UAV ENGINE SPECIFICATIONS
+
+metadata:
+  classification: "REPRESENTATIVE"
+  status: "DEMONSTRATION_ONLY"
+  source: "ASSUMPTION"
+  actual_specification: "UNKNOWN"
+
+validity_limits:
+  engine.rpm:
+    min_plausible: 0.0                          # rad/s (0 RPM)
+    max_plausible: 733.0383                     # rad/s (7000 RPM)
+    max_rate_of_change_per_sec: 418.8791        # rad/s² (4000 RPM/s)
+    raw_unit: "RPM"
+    canonical_unit: "RAD_PER_SEC"
+
+  engine.cylinder.1.cht:
+    min_plausible: 213.15                       # K (-60 °C)
+    max_plausible: 573.15                       # K (+300 °C)
+    max_rate_of_change_per_sec: 15.0            # K/s
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.2.cht:
+    min_plausible: 213.15
+    max_plausible: 573.15
+    max_rate_of_change_per_sec: 15.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.3.cht:
+    min_plausible: 213.15
+    max_plausible: 573.15
+    max_rate_of_change_per_sec: 15.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.4.cht:
+    min_plausible: 213.15
+    max_plausible: 573.15
+    max_rate_of_change_per_sec: 15.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.1.egt:
+    min_plausible: 273.15                       # K (0 °C)
+    max_plausible: 1273.15                      # K (+1000 °C)
+    max_rate_of_change_per_sec: 50.0            # K/s
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.2.egt:
+    min_plausible: 273.15
+    max_plausible: 1273.15
+    max_rate_of_change_per_sec: 50.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.3.egt:
+    min_plausible: 273.15
+    max_plausible: 1273.15
+    max_rate_of_change_per_sec: 50.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.cylinder.4.egt:
+    min_plausible: 273.15
+    max_plausible: 1273.15
+    max_rate_of_change_per_sec: 50.0
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.oil.pressure:
+    min_plausible: 0.0                          # Pa (0 bar)
+    max_plausible: 1000000.0                    # Pa (10 bar)
+    max_rate_of_change_per_sec: 500000.0        # Pa/s
+    raw_unit: "BAR"
+    canonical_unit: "PASCAL"
+
+  engine.oil.temperature:
+    min_plausible: 233.15                       # K (-40 °C)
+    max_plausible: 423.15                       # K (+150 °C)
+    max_rate_of_change_per_sec: 10.0            # K/s
+    raw_unit: "DEGC"
+    canonical_unit: "KELVIN"
+
+  engine.fuel.flow:
+    min_plausible: 0.0                          # kg/s (0 kg/h)
+    max_plausible: 0.05                         # kg/s (180 kg/h)
+    max_rate_of_change_per_sec: 0.02            # kg/s²
+    raw_unit: "KG_PER_HOUR"
+    canonical_unit: "KG_PER_SEC"
+
+  engine.vibration.rms:
+    min_plausible: 0.0                          # m/s²
+    max_plausible: 500.0                        # m/s² (50G)
+    max_rate_of_change_per_sec: 1000.0          # m/s³
+    raw_unit: "M_PER_SEC2"
+    canonical_unit: "M_PER_SEC2"
+
+  electrical.battery.voltage:
+    min_plausible: 0.0                          # V
+    max_plausible: 36.0                         # V
+    max_rate_of_change_per_sec: 15.0            # V/s
+    raw_unit: "VOLT"
+    canonical_unit: "VOLT"
+
+  electrical.alternator.current:
+    min_plausible: 0.0                          # A
+    max_plausible: 150.0                        # A
+    max_rate_of_change_per_sec: 50.0            # A/s
+    raw_unit: "AMPERE"
+    canonical_unit: "AMPERE"
+
+  engine.injection.timing:
+    min_plausible: 0.0                          # °BTDC
+    max_plausible: 60.0                         # °BTDC
+    max_rate_of_change_per_sec: 20.0            # deg/s
+    raw_unit: "DEG_BTDC"
+    canonical_unit: "DEGREE"

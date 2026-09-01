@@ -1,0 +1,30 @@
+# configs/module02/integration.yaml
+# Integration Configuration: Module 02 Simulator -> Telemetry Transport -> Module 01 Ingestion -> Dataset
+# SIH26054 — Module 02 Engine Simulator
+
+rates:
+  physics_rate_hz: 100.0                # Internal physics integration frequency (dt = 0.01 s)
+  telemetry_rate_hz: 50.0               # Telemetry sampling & publication frequency (dt_telemetry = 0.02 s)
+
+transport:
+  type: "IN_MEMORY"                      # "IN_MEMORY" or "SOCKETCAN"
+  interface_name: "vcan0"               # CAN interface name
+  buffer_capacity: 10000                 # Ring buffer capacity
+  backpressure_policy: "BUFFERING"        # "NORMAL", "BUFFERING", "BACKPRESSURE", "DROPPING", "RECOVERING"
+  batch_size: 50
+
+streams:
+  engine_1: "can0_eng1"
+  engine_2: "can0_eng2"
+  aircraft: "can0_aircraft"
+
+export:
+  output_dir: "data/exports"
+  csv_filename: "telemetry_dataset.csv"
+  jsonl_filename: "telemetry_dataset.jsonl"
+  schema_version: "1.0.0"
+
+metadata:
+  physical_origin: "SIMULATOR"
+  state_category: "SIMULATED"
+  processing_context: "SYNTHETIC_GENERATION"

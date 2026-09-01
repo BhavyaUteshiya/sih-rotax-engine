@@ -1,0 +1,20 @@
+# configs/engine_profiles/representative_4stroke_piston.yaml
+# Representative Configurable Aero Piston Engine Profile (V4.3 Specification)
+# ⚠ REPRESENTATIVE DEMONSTRATION VALUES — NOT ACTUAL DRDO / MALE UAV ENGINE SPECIFICATIONS
+
+metadata:
+  profile_name: "REPRESENTATIVE_REFERENCE_ENGINE"
+  classification: "REPRESENTATIVE"
+  status: "DEMONSTRATION_ONLY"
+  source: "ASSUMPTION"
+  actual_specification: "UNKNOWN"
+  disclaimer: "Representative configurable engine profile used for software demonstration and testing. This profile is not claimed to represent the actual operational MALE UAV engine."
+
+geometry:
+  cylinder_count: 4
+  cycle: "4-STROKE"
+  aspiration: "TURBOCHARGED"
+  displacement_liters: 1.35
+  rated_power_hp: 115.0
+  rated_rpm: 5800.0
+  idle_rpm: 1400.0

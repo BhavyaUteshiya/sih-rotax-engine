@@ -1,0 +1,34 @@
+# configs/limits/operational_metadata.yaml
+# Tier 3 (Normal), Tier 4 (Warning), Tier 5 (Critical) Operational Ranges (Metadata only)
+# ⚠ INFORMATIONAL METADATA ONLY — MODULE 01 DOES NOT DIAGNOSE ENGINE FAULTS OR HEALTH
+
+metadata:
+  classification: "REPRESENTATIVE"
+  status: "DEMONSTRATION_ONLY"
+  source: "ASSUMPTION"
+  actual_specification: "UNKNOWN"
+
+operational_limits:
+  engine.rpm:
+    normal_min: 1400.0                          # Idle RPM
+    normal_max: 5800.0                          # Max Continuous RPM
+    warning_high: 6200.0                        # Overspeed warning
+    critical_high: 6500.0                       # Overspeed critical limit
+
+  engine.cylinder.cht:
+    normal_min: 393.15                          # K (120 °C)
+    normal_max: 453.15                          # K (180 °C)
+    warning_high: 473.15                        # K (200 °C)
+    critical_high: 503.15                       # K (230 °C)
+
+  engine.oil.pressure:
+    normal_min: 200000.0                        # Pa (2 bar)
+    normal_max: 500000.0                        # Pa (5 bar)
+    warning_low: 150000.0                       # Pa (1.5 bar)
+    critical_low: 100000.0                      # Pa (1.0 bar)
+
+  engine.oil.temperature:
+    normal_min: 333.15                          # K (60 °C)
+    normal_max: 383.15                          # K (110 °C)
+    warning_high: 393.15                        # K (120 °C)
+    critical_high: 403.15                       # K (130 °C)

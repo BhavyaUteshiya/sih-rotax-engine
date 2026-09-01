@@ -1,0 +1,93 @@
+# configs/module02/engine_parameters.yaml
+# Representative Aero Piston Engine & Subsystem Parameters (V1.3 Specification)
+# ⚠ REPRESENTATIVE CONFIGURATION — NOT ACTUAL PROPRIETARY DRDO SPECIFICATION
+
+metadata:
+  profile_name: "REPRESENTATIVE_AERO_PISTON_115HP"
+  classification: "REPRESENTATIVE"
+  status: "DEMONSTRATION_ONLY"
+  source: "PHYSICAL_ASSUMPTIONS"
+
+geometry_and_inertia:
+  cylinder_count: 4
+  cycle_type: "FOUR_STROKE"
+  displacement_m3: 0.00135                 # 1.35 Liters (0.00135 m^3)
+  rotational_inertia_kg_m2: 0.45           # Shaft & flywheel inertia (kg*m^2)
+  compression_ratio: 9.5
+  bore_m: 0.0975                           # Cylinder bore (m)
+  stroke_m: 0.045                          # Cylinder stroke (m)
+
+fuel_and_combustion:
+  lower_heating_value_j_kg: 44000000.0     # Avgas LHV (44.0 MJ/kg)
+  stoichiometric_afr: 14.7                 # Stoichiometric Air-Fuel Ratio
+  peak_combustion_efficiency: 0.95
+  indicated_efficiency_peak: 0.42          # Peak indicated thermal efficiency
+  optimal_injection_timing_deg_btdc: 25.0  # Optimal BTDC injection timing
+  timing_sensitivity_factor: 0.0008
+
+propeller:
+  diameter_m: 1.6                          # Propeller diameter (m)
+  num_blades: 3
+  activity_factor: 90.0
+  c_q_0: 0.012                             # Baseline torque coefficient
+  c_t_0: 0.080                             # Baseline thrust coefficient
+
+aircraft:
+  dry_mass_kg: 950.0                       # Aircraft empty dry mass (kg)
+  initial_fuel_mass_kg: 150.0              # Initial mission fuel load (kg)
+  initial_payload_mass_kg: 50.0            # Payload mass (kg)
+  wing_area_m2: 12.5                       # Wing reference area (m^2)
+  drag_coefficient_0: 0.028                # Parasite drag coefficient
+  induced_drag_factor: 0.045
+  takeoff_speed_m_s: 35.0                  # Rotation airspeed V_rotate (m/s)
+  max_altitude_m: 6000.0                   # Operational ceiling (m)
+
+atmosphere:
+  sea_level_pressure_pa: 101325.0          # ISA sea-level pressure (Pa)
+  sea_level_temp_k: 288.15                 # ISA sea-level temperature (K)
+  temperature_lapse_rate_k_m: 0.0065       # Troposphere lapse rate (K/m)
+  gas_constant_dry_air: 287.058            # Rd (J/(kg K))
+  gas_constant_water_vapor: 461.495        # Rv (J/(kg K))
+  standard_gravity_m_s2: 9.80665
+
+thermal:
+  cht_metal_mass_capacity_j_k: 4500.0      # Cylinder head heat mass capacity (J/K)
+  head_heat_fraction: 0.18                 # Fraction of combustion heat to CHT
+  cooling_base_coefficient: 12.0
+  cooling_velocity_factor: 0.08
+  egt_thermocouple_tau_sec: 1.5            # EGT thermocouple lag constant (s)
+  egt_min_k: 273.15
+  egt_max_k: 1373.15
+
+lubrication:
+  oil_sump_heat_capacity_j_k: 15000.0      # Oil sump thermal mass (J/K)
+  oil_reference_viscosity_pa_s: 0.08       # Viscosity at 100°C (373.15 K)
+  viscosity_activation_energy: 2500.0
+  oil_pump_displacement: 0.0000025
+  relief_valve_pressure_pa: 500000.0       # Relief valve setting (5.0 bar)
+
+electrical:
+  battery_capacity_ah: 30.0                # Battery capacity (Ah)
+  battery_nominal_voltage_v: 28.0          # 28V DC bus system
+  battery_internal_resistance_ohm: 0.08
+  alternator_max_current_a: 60.0           # 60 A max alternator
+  alternator_cutin_rpm: 1000.0
+  alternator_efficiency: 0.82
+  avionics_load_current_a: 12.0
+  fuel_pump_current_a: 4.5
+  payload_current_a: 8.0
+
+vibration:
+  baseline_rms_m_s2: 5.0                   # Healthy baseline vibration RMS (m/s^2)
+  rpm_harmonic_order_1: 1.0
+  rpm_harmonic_order_2: 2.0
+  imbalance_sensitivity: 0.15
+
+degradation:
+  bearing_wear_rate_k_b: 0.00000001
+  injector_wear_rate_k_inj: 0.00000002
+  ring_wear_rate_k_ring: 0.000000015
+
+sensors:
+  default_noise_std_percent: 0.5           # 0.5% additive Gaussian noise
+  sensor_delay_seconds: 0.02               # 20 ms sensor transmission delay

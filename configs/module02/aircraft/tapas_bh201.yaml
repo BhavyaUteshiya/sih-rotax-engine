@@ -1,0 +1,121 @@
+# configs/module02/aircraft/tapas_bh201.yaml
+# TAPAS-BH-201 MALE UAV Airframe Reference Profile (Audited Provenance)
+# SIH26054 — Aero Engine Digital Twin Platform
+
+metadata:
+  airframe_id: "TAPAS_BH201"
+  platform_name: "TAPAS-BH-201 (Rustom-II)"
+  platform_class: "MALE_UAV"
+  configuration_type: "TWIN_ENGINE_FIXED_WING_ISR"
+  disclaimer: "Parameters explicitly separate DRDO official public performance figures from reported defense literature and engineering estimates."
+
+architecture:
+  engine_count:
+    value: 2                               # TWIN-ENGINE PLATFORM
+    unit: "COUNT"
+    classification: "OFFICIAL"
+    source: "DRDO_PUBLIC_RELEASE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  engine_configuration_file: "configs/module02/engines/rotax_914.yaml"
+  propeller_configuration_file: "configs/module02/propellers/tapas_bh201_reference_propeller.yaml"
+
+performance_requirements:
+  target_operating_altitude_m:
+    value: 9144.0                          # 30,000 ft Target Ceiling
+    unit: "METER"
+    classification: "OFFICIAL"
+    source: "DRDO_PUBLIC_RELEASE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  demonstrated_altitude_m:
+    value: 8534.4                          # 28,000 ft Demonstrated Ceiling
+    unit: "METER"
+    classification: "OFFICIAL"
+    source: "DRDO_PUBLIC_RELEASE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  target_endurance_hours:
+    value: 24.0                            # 24 Hours Target Endurance
+    unit: "HOUR"
+    classification: "OFFICIAL"
+    source: "DRDO_PUBLIC_RELEASE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  demonstrated_endurance_hours:
+    value: 18.0                            # 18 Hours Demonstrated Endurance
+    unit: "HOUR"
+    classification: "OFFICIAL"
+    source: "DRDO_PUBLIC_RELEASE"
+    confidence: "HIGH"
+    calibration_required: false
+
+mass_and_payload:
+  max_takeoff_weight_kg:
+    value: 2800.0                          # ~2800 kg MTOW
+    unit: "KILOGRAM"
+    classification: "REPORTED"
+    source: "PUBLIC_DEFENSE_LITERATURE"
+    confidence: "MEDIUM"
+    calibration_required: true
+
+  empty_dry_mass_kg:
+    value: 1800.0
+    unit: "KILOGRAM"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "MEDIUM"
+    calibration_required: true
+
+  payload_capacity_kg:
+    value: 350.0                           # ISR Payload Suite (EO/IR, SAR)
+    unit: "KILOGRAM"
+    classification: "REPORTED"
+    source: "PUBLIC_DEFENSE_LITERATURE"
+    confidence: "MEDIUM"
+    calibration_required: false
+
+  initial_fuel_mass_kg:
+    value: 650.0                           # Internal Fuel Capacity
+    unit: "KILOGRAM"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "MEDIUM"
+    calibration_required: true
+
+aerodynamics:
+  wingspan_m:
+    value: 20.6                            # ~20.6 m Wingspan
+    unit: "METER"
+    classification: "REPORTED"
+    source: "PUBLIC_DEFENSE_LITERATURE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  wing_area_m2:
+    value: 24.5
+    unit: "METER2"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "MEDIUM"
+    calibration_required: true
+
+  drag_coefficient_0:
+    value: 0.024                           # Clean parasite drag coefficient
+    unit: "RATIO"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "LOW"
+    calibration_required: true
+
+  takeoff_speed_m_s:
+    value: 42.0                            # ~150 km/h Takeoff Rotation Speed
+    unit: "M_PER_SEC"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "MEDIUM"
+    calibration_required: true

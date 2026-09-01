@@ -1,0 +1,65 @@
+# configs/module02/propellers/tapas_bh201_reference_propeller.yaml
+# TAPAS-BH-201 Gearbox & Propeller Reference Profile
+# SIH26054 — Aero Engine Digital Twin Platform
+
+metadata:
+  profile_id: "TAPAS_BH201_GEARBOX_PROPELLER"
+  description: "3-Blade Variable Pitch Constant Speed Propeller & Gearbox System"
+
+gearbox:
+  engine_to_propeller_speed_ratio:
+    value: 0.65                            # N_prop = N_engine * 0.65
+    unit: "RATIO"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "MEDIUM"
+    calibration_required: true
+
+  reduction_ratio:
+    value: 1.5384615                       # N_engine / N_prop = 1 / 0.65
+    unit: "RATIO"
+    classification: "DERIVED"
+    source: "MATHEMATICAL_RECIPROCAL"
+    confidence: "HIGH"
+    calibration_required: false
+
+  gearbox_efficiency:
+    value: 0.97                            # 97% mechanical transmission efficiency
+    unit: "RATIO"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "HIGH"
+    calibration_required: true
+
+propeller:
+  diameter_m:
+    value: 1.85                            # 1.85 m Propeller Diameter
+    unit: "METER"
+    classification: "REPORTED"
+    source: "PUBLIC_DEFENSE_LITERATURE"
+    confidence: "MEDIUM"
+    calibration_required: false
+
+  num_blades:
+    value: 3
+    unit: "COUNT"
+    classification: "REPORTED"
+    source: "PUBLIC_DEFENSE_LITERATURE"
+    confidence: "HIGH"
+    calibration_required: false
+
+  c_q_0:
+    value: 0.014
+    unit: "COEFFICIENT"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "LOW"
+    calibration_required: true
+
+  c_t_0:
+    value: 0.085
+    unit: "COEFFICIENT"
+    classification: "ESTIMATED"
+    source: "ENGINEERING_ESTIMATE"
+    confidence: "LOW"
+    calibration_required: true

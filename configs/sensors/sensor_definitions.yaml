@@ -1,0 +1,129 @@
+# configs/sensors/sensor_definitions.yaml
+# Representative Sensor Definitions & Sampling Frequencies
+# ⚠ REPRESENTATIVE DEMONSTRATION VALUES — NOT ACTUAL DRDO / MALE UAV ENGINE SPECIFICATIONS
+
+metadata:
+  classification: "REPRESENTATIVE"
+  status: "DEMONSTRATION_ONLY"
+  source: "ASSUMPTION"
+  actual_specification: "UNKNOWN"
+
+sensors:
+  engine.rpm:
+    classification: "SIH_REQUIRED"
+    raw_unit: "RPM"
+    engineering_unit: "RPM"
+    canonical_unit: "RAD_PER_SEC"
+    native_sampling_rate_hz: 50.0
+
+  engine.cylinder.1.cht:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.2.cht:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.3.cht:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.4.cht:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.1.egt:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.2.egt:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.3.egt:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.cylinder.4.egt:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.oil.pressure:
+    classification: "SIH_REQUIRED"
+    raw_unit: "BAR"
+    engineering_unit: "bar"
+    canonical_unit: "PASCAL"
+    native_sampling_rate_hz: 10.0
+
+  engine.oil.temperature:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEGC"
+    engineering_unit: "°C"
+    canonical_unit: "KELVIN"
+    native_sampling_rate_hz: 2.0
+
+  engine.fuel.flow:
+    classification: "SIH_REQUIRED"
+    raw_unit: "KG_PER_HOUR"
+    engineering_unit: "kg/h"
+    canonical_unit: "KG_PER_SEC"
+    native_sampling_rate_hz: 5.0
+
+  engine.vibration.rms:
+    classification: "SIH_REQUIRED"
+    raw_unit: "M_PER_SEC2"
+    engineering_unit: "m/s²"
+    canonical_unit: "M_PER_SEC2"
+    native_sampling_rate_hz: 1000.0
+
+  electrical.battery.voltage:
+    classification: "SIH_REQUIRED"
+    raw_unit: "VOLT"
+    engineering_unit: "V"
+    canonical_unit: "VOLT"
+    native_sampling_rate_hz: 5.0
+
+  electrical.alternator.current:
+    classification: "SIH_REQUIRED"
+    raw_unit: "AMPERE"
+    engineering_unit: "A"
+    canonical_unit: "AMPERE"
+    native_sampling_rate_hz: 5.0
+
+  engine.injection.timing:
+    classification: "SIH_REQUIRED"
+    raw_unit: "DEG_BTDC"
+    engineering_unit: "°BTDC"
+    canonical_unit: "DEGREE"
+    native_sampling_rate_hz: 10.0
+
+  environment.air_density:
+    classification: "DERIVED"
+    raw_unit: "KG_PER_M3"
+    engineering_unit: "kg/m³"
+    canonical_unit: "KG_PER_M3"
+    native_sampling_rate_hz: 1.0

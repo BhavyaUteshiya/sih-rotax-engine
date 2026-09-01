@@ -1,0 +1,989 @@
+metadata:
+  profile_id: ROTAX_914_UL_115HP
+  engine_name: ROTAX 914 UL/F 115 hp class
+  engine_class: 4-cylinder horizontally opposed turbocharged aero piston engine
+  target_application: UAV propulsion reference installation
+  identity_note: Rotax 914 baseline adapted from the user-provided Rotax 914 engine
+    specification. Proprietary turbo maps remain estimated/synthetic.
+  disclaimer: Verified values are limited to the supplied specification; non-public
+    maps and calibration coefficients are explicitly estimated or synthetic.
+provenance_policy:
+  strict_validation: true
+  allow_unclassified: false
+general:
+  engine_type:
+    value: 4-STROKE_RECIPROCATING_GASOLINE
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  fuel_type:
+    value: GASOLINE_AVGAS_UNLEADED
+    unit: TEXT
+    classification: REPORTED
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  cooling_type:
+    value: LIQUID_COOLED_HEADS_AIR_COOLED_BARRELS
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  aspiration:
+    value: TURBOCHARGED
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  control_system:
+    value: TCU_AUTOMATIC_WASTEGATE
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  cylinder_count:
+    value: 4
+    unit: COUNT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  ignition_system:
+    value: DUAL_ELECTRONIC_BREAKERLESS_CDI
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  fuel_system:
+    value: DUAL_CONSTANT_DEPRESSION_CARBURETORS
+    unit: TEXT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+power_and_performance:
+  takeoff_rated_power_hp:
+    value: 115.0
+    unit: HP
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  takeoff_rated_power_w:
+    value: 84500.0
+    unit: WATT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  rated_rpm:
+    value: 5800.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  idle_rpm:
+    value: 1400.0
+    unit: RPM
+    classification: ESTIMATED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  max_indicated_torque_n_m:
+    value: 165.0
+    unit: NEWTON_METER
+    classification: ESTIMATED
+    source: DERIVED_FROM_144NM_BRAKE_TORQUE
+    confidence: MEDIUM
+    calibration_required: true
+  continuous_rated_power_w:
+    value: 73500.0
+    unit: WATT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  continuous_rated_rpm:
+    value: 5500.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  torque_peak_rpm:
+    value: 4900.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_brake_torque_n_m:
+    value: 144.0
+    unit: NEWTON_METER
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  ui_full_scale_throttle_pct:
+    value: 115.0
+    unit: PERCENT
+    classification: DERIVED
+    source: UI_NORMALIZATION_TO_ROTAX_TAKEOFF_RATING
+    confidence: HIGH
+    calibration_required: false
+geometry_and_inertia:
+  displacement_m3:
+    value: 0.0012112
+    unit: METER3
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  rotational_inertia_kg_m2:
+    value: 0.15
+    unit: KG_M2
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  compression_ratio:
+    value: 9.0
+    unit: RATIO
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  bore_m:
+    value: 0.0795
+    unit: METER
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  stroke_m:
+    value: 0.061
+    unit: METER
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+friction_and_mechanical:
+  friction_static_n_m:
+    value: 7.0
+    unit: NEWTON_METER
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  friction_viscous_n_m_s_rad:
+    value: 0.018
+    unit: N_M_S_PER_RAD
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  friction_hydrodynamic_n_m_s2_rad2:
+    value: 6.0e-05
+    unit: N_M_S2_PER_RAD2
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+fuel_and_combustion:
+  lower_heating_value_j_kg:
+    value: 43400000.0
+    unit: J_PER_KG
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: HIGH
+    calibration_required: false
+  stoichiometric_afr:
+    value: 14.7
+    unit: RATIO
+    classification: ASSUMED
+    source: STANDARD_GASOLINE_FUEL_DATA
+    confidence: HIGH
+    calibration_required: false
+  idle_fuel_flow_kg_h:
+    value: 1.3
+    unit: KG_PER_HOUR
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  max_fuel_flow_kg_h:
+    value: 23.4
+    unit: KG_PER_HOUR
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  peak_combustion_efficiency:
+    value: 0.95
+    unit: RATIO
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: MEDIUM
+    calibration_required: true
+  indicated_efficiency_peak:
+    value: 0.30
+    unit: RATIO
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  optimal_injection_timing_deg_btdc:
+    value: 26.0
+    unit: DEGREE
+    classification: ESTIMATED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  injection_timing_sensitivity:
+    value: 0.00025
+    unit: PER_DEG2
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  exhaust_heat_fraction:
+    value: 0.38
+    unit: RATIO
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: MEDIUM
+    calibration_required: true
+turbocharger:
+  turbo_type: EXHAUST_GAS_DRIVEN_TURBO_TCU_CONTROLLED
+  rotational_inertia_kg_m2: &id001
+    value: 8.0e-05
+    unit: KG_M2
+    classification: ESTIMATED
+    source: ROTAX_914_TURBO_SYNTHETIC_MODEL
+    confidence: LOW
+    calibration_required: true
+  max_manifold_absolute_pressure_pa:
+    value: 132000.0
+    unit: PASCAL
+    classification: ESTIMATED
+    source: ROTAX_914_MAP_RATING_38_4_TO_39_0_INHG
+    confidence: MEDIUM
+    calibration_required: true
+  max_compressor_pressure_ratio:
+    value: 2.15
+    unit: RATIO
+    classification: DERIVED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: LOW
+    calibration_required: true
+  compressor_efficiency_peak: &id003
+    value: 0.75
+    unit: RATIO
+    classification: ESTIMATED
+    source: ANALOGOUS_TURBO_MAP
+    confidence: LOW
+    calibration_required: true
+  turbine_efficiency_peak: &id002
+    value: 0.72
+    unit: RATIO
+    classification: ESTIMATED
+    source: ANALOGOUS_TURBO_MAP
+    confidence: LOW
+    calibration_required: true
+  max_turbo_speed_rpm: &id005
+    value: 140000.0
+    unit: RPM
+    classification: ESTIMATED
+    source: ROTAX_914_TURBO_SYNTHETIC_MODEL
+    confidence: LOW
+    calibration_required: true
+  intercooler_effectiveness:
+    value: 0.8
+    unit: RATIO
+    classification: ASSUMED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: MEDIUM
+    calibration_required: true
+  turbo_friction_static_n_m:
+    value: 0.015
+    unit: NEWTON_METER
+    classification: ESTIMATED
+    source: ROTAX_914_TURBO_SYNTHETIC_MODEL
+    confidence: LOW
+    calibration_required: true
+  turbo_friction_viscous_n_m_s_rad: &id004
+    value: 4.0e-05
+    unit: N_M_S_PER_RAD
+    classification: ESTIMATED
+    source: ROTAX_914_TURBO_SYNTHETIC_MODEL
+    confidence: LOW
+    calibration_required: true
+  turbo_friction_hydrodynamic_n_m_s2_rad2:
+    value: 8.0e-09
+    unit: N_M_S2_PER_RAD2
+    classification: ESTIMATED
+    source: ROTAX_914_TURBO_SYNTHETIC_MODEL
+    confidence: LOW
+    calibration_required: true
+  lag_tau_s: &id006
+    value: 0.5
+    unit: SECOND
+    classification: ESTIMATED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  takeoff_target_map_pa:
+    value: 132000.0
+    unit: PASCAL
+    classification: DERIVED
+    source: 38_4_TO_39_0_INHG_RATING
+    confidence: HIGH
+    calibration_required: false
+  takeoff_duration_s:
+    value: 300.0
+    unit: SECOND
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  takeoff_reset_throttle_ratio:
+    value: 1.08
+    unit: RATIO
+    classification: ESTIMATED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+thermal:
+  cylinder_thermal_mass_kg:
+    value: 18.5
+    unit: KILOGRAM
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  cylinder_specific_heat_j_kg_k:
+    value: 897.0
+    unit: J_PER_KG_K
+    classification: ASSUMED
+    source: ALUMINUM_ALLOY_MATERIAL_DATA
+    confidence: HIGH
+    calibration_required: false
+  cylinder_head_mass_kg:
+    value: 18.5
+    unit: KILOGRAM
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  wall_heat_fraction:
+    value: 0.18
+    unit: RATIO
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  egt_sensor_time_constant_sec:
+    value: 0.5
+    unit: SECOND
+    classification: ASSUMED
+    source: SIMULATOR_SENSOR_MODEL
+    confidence: MEDIUM
+    calibration_required: true
+  cylinder_head_specific_heat_j_kg_k:
+    value: 897.0
+    unit: J_PER_KG_K
+    classification: ASSUMED
+    source: ALUMINUM_ALLOY_MATERIAL_DATA
+    confidence: HIGH
+    calibration_required: false
+  cooling_surface_area_m2:
+    value: 0.85
+    unit: METER2
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  cooling_coeff_base_w_m2_k:
+    value: 45.0
+    unit: W_PER_M2_K
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  max_safe_cht_k:
+    value: 408.15
+    unit: KELVIN
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_safe_egt_k:
+    value: 1223.15
+    unit: KELVIN
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_safe_oil_temp_k:
+    value: 403.15
+    unit: KELVIN
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: MEDIUM
+    calibration_required: true
+lubrication:
+  oil_mass_kg:
+    value: 4.0
+    unit: KILOGRAM
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  oil_specific_heat_j_kg_k:
+    value: 2100.0
+    unit: J_PER_KG_K
+    classification: ASSUMED
+    source: OIL_MATERIAL_DATA
+    confidence: HIGH
+    calibration_required: false
+  reference_oil_temperature_k:
+    value: 363.15
+    unit: KELVIN
+    classification: ASSUMED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: HIGH
+    calibration_required: false
+  reference_viscosity_pa_s:
+    value: 0.012
+    unit: PASCAL_SECOND
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  viscosity_temperature_coeff_k:
+    value: 3800.0
+    unit: KELVIN
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  oil_cooler_coeff_w_k:
+    value: 35.0
+    unit: W_PER_K
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  min_oil_pressure_pa:
+    value: 80000.0
+    unit: PASCAL
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  normal_oil_pressure_min_pa:
+    value: 200000.0
+    unit: PASCAL
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  normal_oil_pressure_max_pa:
+    value: 500000.0
+    unit: PASCAL
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_oil_pressure_pa:
+    value: 700000.0
+    unit: PASCAL
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+propeller:
+  diameter_m:
+    value: 1.7
+    unit: METER
+    classification: CALIBRATED
+    source: ROTAX_914_PROPULSION_CALIBRATION
+    confidence: MEDIUM
+    calibration_required: true
+  blade_count:
+    value: 3
+    unit: COUNT
+    classification: ASSUMED
+    source: EXISTING_AIRFRAME_PROPULSION_GEOMETRY
+    confidence: MEDIUM
+    calibration_required: true
+  torque_coefficient_cq:
+    value: 0.0125
+    unit: COEFFICIENT
+    classification: CALIBRATED
+    source: ROTAX_914_PROPULSION_CALIBRATION
+    confidence: LOW
+    calibration_required: true
+  thrust_coefficient_ct:
+    value: 0.075
+    unit: COEFFICIENT
+    classification: CALIBRATED
+    source: ROTAX_914_PROPULSION_CALIBRATION
+    confidence: LOW
+    calibration_required: true
+gearbox:
+  engine_to_propeller_speed_ratio:
+    value: 0.41175986
+    unit: RATIO
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  gearbox_efficiency:
+    value: 0.97
+    unit: RATIO
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: MEDIUM
+    calibration_required: true
+degradation:
+  bearing_wear_rate_per_sec:
+    value: 1.0e-06
+    unit: PER_SECOND
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  ring_wear_rate_per_sec:
+    value: 1.0e-06
+    unit: PER_SECOND
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  injector_wear_rate_per_sec:
+    value: 1.0e-06
+    unit: PER_SECOND
+    classification: ESTIMATED
+    source: FUEL_SYSTEM_WEAR_PROXY_FOR_CARBURETOR
+    confidence: LOW
+    calibration_required: true
+  friction_wear_sensitivity:
+    value: 0.5
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  combustion_ring_sensitivity:
+    value: 0.15
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  combustion_injector_sensitivity:
+    value: 0.1
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+vibration:
+  rotational_amplitude_base_m_s2:
+    value: 8.0
+    unit: M_PER_SEC2
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  firing_amplitude_base_m_s2:
+    value: 15.0
+    unit: M_PER_SEC2
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  propeller_amplitude_base_m_s2:
+    value: 6.0
+    unit: M_PER_SEC2
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  degradation_vibration_sensitivity:
+    value: 25.0
+    unit: M_PER_SEC2
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: LOW
+    calibration_required: true
+  sample_rate_hz:
+    value: 1000.0
+    unit: HERTZ
+    classification: REPORTED
+    source: TELEMETRY_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+electrical:
+  nominal_bus_voltage_v:
+    value: 28.0
+    unit: VOLT
+    classification: REPORTED
+    source: PUBLIC_DEFENSE_SPECS
+    confidence: HIGH
+    calibration_required: false
+  baseline_avionics_load_w:
+    value: 800.0
+    unit: WATT
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+alternator:
+  max_current_a:
+    value: 75.0
+    unit: AMPERE
+    classification: REPORTED
+    source: PUBLIC_TECHNICAL_LITERATURE
+    confidence: HIGH
+    calibration_required: false
+  efficiency:
+    value: 0.85
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  cutin_rpm:
+    value: 1000.0
+    unit: RPM
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+battery:
+  nominal_voltage_v:
+    value: 24.0
+    unit: VOLT
+    classification: REPORTED
+    source: PUBLIC_DEFENSE_SPECS
+    confidence: HIGH
+    calibration_required: false
+  capacity_ah:
+    value: 30.0
+    unit: AMPERE_HOUR
+    classification: REPORTED
+    source: PUBLIC_DEFENSE_SPECS
+    confidence: HIGH
+    calibration_required: false
+  nominal_energy_j:
+    value: 2592000.0
+    unit: JOULE
+    classification: DERIVED
+    source: FORMULA_DERIVATION
+    confidence: HIGH
+    calibration_required: false
+  initial_soc:
+    value: 0.9
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: HIGH
+    calibration_required: true
+  min_starting_soc:
+    value: 0.2
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: HIGH
+    calibration_required: true
+  charge_efficiency:
+    value: 0.9
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  discharge_efficiency:
+    value: 0.95
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+starter:
+  starter_power_w:
+    value: 1500.0
+    unit: WATT
+    classification: REPORTED
+    source: PUBLIC_TECHNICAL_LITERATURE
+    confidence: HIGH
+    calibration_required: false
+  starter_efficiency:
+    value: 0.8
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  min_cranking_rad_s:
+    value: 15.0
+    unit: RAD_PER_SEC
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: HIGH
+    calibration_required: true
+aircraft:
+  gross_takeoff_mass_kg:
+    value: 1800.0
+    unit: KILOGRAM
+    classification: REPORTED
+    source: DRDO_PUBLIC_RELEASE
+    confidence: HIGH
+    calibration_required: false
+  gravity_m_s2:
+    value: 9.80665
+    unit: M_PER_SEC2
+    classification: REPORTED
+    source: STANDARD_PHYSICAL_CONSTANT
+    confidence: HIGH
+    calibration_required: false
+aerodynamics:
+  wing_area_m2:
+    value: 22.5
+    unit: METER2
+    classification: REPORTED
+    source: PUBLIC_DEFENSE_SPECS
+    confidence: HIGH
+    calibration_required: false
+  zero_lift_drag_coefficient_cd0:
+    value: 0.025
+    unit: COEFFICIENT
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  induced_drag_coefficient_k:
+    value: 0.045
+    unit: COEFFICIENT
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  trim_lift_coefficient_cl:
+    value: 0.45
+    unit: COEFFICIENT
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+fuel_system:
+  max_fuel_flow_kg_h:
+    value: 23.4
+    unit: KG_PER_HOUR
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: HIGH
+    calibration_required: false
+  lower_heating_value_lhv_j_kg:
+    value: 43400000.0
+    unit: J_PER_KG
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: HIGH
+    calibration_required: false
+  stoichiometric_afr:
+    value: 14.7
+    unit: RATIO
+    classification: ASSUMED
+    source: STANDARD_GASOLINE_FUEL_DATA
+    confidence: HIGH
+    calibration_required: false
+  idle_fuel_flow_kg_h:
+    value: 1.3
+    unit: KG_PER_HOUR
+    classification: ESTIMATED
+    source: ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+combustion:
+  peak_combustion_efficiency:
+    value: 0.96
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  useful_indicated_work_fraction:
+    value: 0.42
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  exhaust_energy_fraction:
+    value: 0.35
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  wall_heat_transfer_fraction:
+    value: 0.2
+    unit: RATIO
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  unmodeled_residual_fraction:
+    value: 0.03
+    unit: RATIO
+    classification: DERIVED
+    source: FORMULA_DERIVATION
+    confidence: HIGH
+    calibration_required: false
+injection:
+  start_of_injection_deg_btdc:
+    value: 18.0
+    unit: DEGREE
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+  combustion_duration_deg:
+    value: 40.0
+    unit: DEGREE
+    classification: ESTIMATED
+    source: ENGINEERING_ESTIMATE
+    confidence: MEDIUM
+    calibration_required: true
+thermodynamics:
+  exhaust_specific_heat_cp_j_kg_k:
+    value: 1150.0
+    unit: J_PER_KG_K
+    classification: REPORTED
+    source: THERMODYNAMIC_TABLES
+    confidence: HIGH
+    calibration_required: false
+cooling:
+  coolant_mass_kg:
+    value: 8.0
+    unit: KILOGRAM
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  coolant_specific_heat_j_kg_k:
+    value: 3800.0
+    unit: J_PER_KG_K
+    classification: ASSUMED
+    source: COOLANT_FLUID_PROPERTIES
+    confidence: HIGH
+    calibration_required: false
+  radiator_rejection_coeff_w_k:
+    value: 80.0
+    unit: W_PER_K
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+  max_safe_coolant_temp_k:
+    value: 408.15
+    unit: KELVIN
+    classification: ESTIMATED
+    source: ROTAX_914_REDUCED_ORDER_MODEL
+    confidence: LOW
+    calibration_required: true
+turbocharger_dynamic:
+  turbo_rotational_inertia_kg_m2: *id001
+  turbine_efficiency: *id002
+  compressor_efficiency: *id003
+  turbo_friction_coeff_n_m_s_rad: *id004
+  max_turbo_speed_rpm: *id005
+  lag_tau_s: *id006
+rotax_limits:
+  max_takeoff_rpm:
+    value: 5800.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_continuous_rpm:
+    value: 5500.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_takeoff_power_w:
+    value: 84500.0
+    unit: WATT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_continuous_power_w:
+    value: 73500.0
+    unit: WATT
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_cht_k:
+    value: 408.15
+    unit: KELVIN
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  max_egt_k:
+    value: 1223.15
+    unit: KELVIN
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  min_fuel_pressure_differential_pa:
+    value: 15000.0
+    unit: PASCAL
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  takeoff_duration_s:
+    value: 300.0
+    unit: SECOND
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  takeoff_reset_throttle_ratio:
+    value: 1.08
+    unit: RATIO
+    classification: ESTIMATED
+    source: USER_PROVIDED_ROTAX_914_ENGINEERING_BASELINE
+    confidence: MEDIUM
+    calibration_required: true
+  max_engine_torque_nm:
+    value: 144.0
+    unit: NEWTON_METER
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
+  torque_peak_rpm:
+    value: 4900.0
+    unit: RPM
+    classification: OFFICIAL
+    source: USER_PROVIDED_ROTAX_914_SPECIFICATION
+    confidence: HIGH
+    calibration_required: false
