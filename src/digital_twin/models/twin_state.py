@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from src.digital_twin.models.expected_state import ExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ResidualState
+from src.digital_twin.models.twin_internal_state import TwinInternalState
 
 
 class DigitalTwinStatus(str, Enum):
@@ -36,6 +37,8 @@ class DigitalTwinState:
     observed_state: ObservedState = field(default_factory=ObservedState)
     expected_state: ExpectedState = field(default_factory=ExpectedState)
     residual_state: ResidualState = field(default_factory=ResidualState)
+    healthy_internal_state: TwinInternalState = field(default_factory=TwinInternalState)
+    estimated_actual_state: TwinInternalState = field(default_factory=TwinInternalState)
 
     operating_context: Dict[str, Any] = field(default_factory=dict)
 
@@ -56,6 +59,8 @@ class DigitalTwinState:
             "data_quality": self.data_quality,
             "confidence": round(self.confidence, 4),
             "operating_context": self.operating_context,
+            "healthy_internal_state": self.healthy_internal_state.to_dict(),
+            "estimated_actual_state": self.estimated_actual_state.to_dict(),
             "observed_state": self.observed_state.to_dict(),
             "expected_state": self.expected_state.to_dict(),
             "residual_state": self.residual_state.to_dict(),

@@ -1,0 +1,117 @@
+================================================================================
+ROTAX 914 DIGITAL TWIN — PHYSICS AND ENGINEERING FORMULAS
+================================================================================
+This document contains the actual physics, engineering, and empirical formulas 
+currently used by the Digital Twin ExpectedBehaviorModel.
+
+IMPORTANT: Most of these formulas are empirical engineering approximations 
+designed to provide a healthy reference trajectory for the Digital Twin. They 
+are NOT exact thermodynamic models from Rotax unless marked VERIFIED.
+
+================================================================================
+1. MANIFOLD ABSOLUTE PRESSURE (MAP)
+================================================================================
+* Formula: target_map = idle_map + (max_map - idle_map) * (throttle_pct / 100.0)
+* Description: Target intake manifold pressure based on pilot throttle command.
+* Variables: 
+  - idle_map: 0.35 bar
+  - max_map: 1.15 bar (Rotax 914 max continuous target)
+  - throttle_pct: 0 to 100%
+* Units: bar
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: ESTIMATED (Linear approximation of throttle plate restriction/turbo map)
+* Limitations: Assumes instantaneous turbo response to throttle position.
+
+* Formula (Lag): next_map = prev_map + (target_map - prev_map) * (1.0 - exp(-dt / 0.5))
+* Description: First-order lag representing manifold filling dynamics.
+* Variables: dt (seconds), tau = 0.5s.
+* Status: ESTIMATED
+
+================================================================================
+2. ENGINE SPEED (RPM)
+================================================================================
+* Formula: target_rpm = 1400.0 + (5800.0 - 1400.0) * ((target_map - 0.35) / (1.15 - 0.35))
+* Description: Target RPM derived from MAP, assuming a nominal propeller load curve.
+* Variables: target_map (bar)
+* Units: RPM
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: ESTIMATED (Simplified steady-state prop-load line)
+
+* Formula (Lag): next_rpm = prev_rpm + (target_rpm - prev_rpm) * (1.0 - exp(-dt / 1.5))
+* Description: First-order lag representing rotational inertia of engine/propeller.
+* Variables: dt (seconds), tau = 1.5s.
+* Status: ESTIMATED
+
+================================================================================
+3. AIRFLOW
+================================================================================
+* Formula: airflow = 350.0 * (next_rpm / 5800.0) * (next_map / 1.15)
+* Description: Engine volumetric airflow approximation. Proportional to speed and density (MAP).
+* Variables: next_rpm (RPM), next_map (bar)
+* Units: kg/h
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: DERIVED (Standard speed-density volumetric efficiency approximation)
+* Assumptions: Volumetric efficiency remains constant across the RPM range.
+
+================================================================================
+4. FUEL FLOW AND AFR
+================================================================================
+* Formula: afr_val = 14.7 - 2.0 * (throttle_pct / 100.0)
+* Description: Air-Fuel Ratio target. Stoichiometric at idle, scaling richer (12.7) at max power to cool combustion.
+* Variables: throttle_pct (%)
+* Units: ratio
+* Status: ESTIMATED
+
+* Formula: fuel_val = air_val / afr_val
+* Description: Required fuel flow to meet the AFR target for the ingested air.
+* Variables: air_val (kg/h), afr_val (ratio)
+* Units: kg/h
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: DERIVED
+
+================================================================================
+5. TORQUE AND POWER
+================================================================================
+* Formula: torque_val = 135.0 * (next_map / 1.15)
+* Description: Engine brake torque output. Scales linearly with MAP.
+* Variables: next_map (bar)
+* Units: Nm
+* Status: ESTIMATED (Assumes max torque 135 Nm at max continuous MAP).
+
+* Formula: ind_power = (torque_val * next_rpm * 2 * pi / 60) / 1000.0
+* Description: Standard rotational mechanical power equation.
+* Variables: torque_val (Nm), next_rpm (RPM)
+* Units: kW
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: VERIFIED (Standard physics equation)
+
+================================================================================
+6. THERMAL STATES (EGT, CHT, OIL)
+================================================================================
+* Target Formulas:
+  - target_egt = 400.0 + 400.0 * (fuel_val / 25.0)
+  - target_cht = 80.0 + 40.0 * (fuel_val / 25.0)
+  - target_oil = 80.0 + 30.0 * (fuel_val / 25.0)
+* Description: Target temperatures scaling linearly with fuel flow (combustion heat).
+* Variables: fuel_val (kg/h). Max fuel assumed ~25 kg/h.
+* Units: °C
+* Status: ESTIMATED
+
+* Lag Formulas (Thermal Mass):
+  - next_egt = prev_egt + (target_egt - prev_egt) * (1.0 - exp(-dt / 2.0))
+  - next_cht = prev_cht + (target_cht - prev_cht) * (1.0 - exp(-dt / 15.0))
+  - next_oil = prev_oil + (target_oil - prev_oil) * (1.0 - exp(-dt / 30.0))
+* Description: First-order lags representing the thermal inertia of the exhaust gas, cylinder heads, and oil circuit.
+* Variables: dt (seconds). tau_egt=2.0s, tau_cht=15.0s, tau_oil=30.0s.
+* Location: src/digital_twin/physics/expected_behavior.py
+* Status: ESTIMATED
+
+================================================================================
+7. STATE ESTIMATOR
+================================================================================
+* Formula: corrected_val = predicted_val + alpha * (observed_val - predicted_val)
+* Description: Proportional gain (Alpha/Complementary filter) for telemetry synchronization.
+* Variables: predicted_val (from healthy internal state), observed_val (from telemetry), alpha = 0.2.
+* Location: src/digital_twin/physics/estimator.py
+* Status: ESTIMATED
+* Note: This generates the Estimated Actual State, but does NOT feed back into the Healthy Model predictions.

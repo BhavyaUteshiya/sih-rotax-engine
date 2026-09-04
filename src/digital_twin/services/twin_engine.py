@@ -11,7 +11,9 @@ from src.digital_twin.models.expected_state import ExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ResidualState
 from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStatus
+from src.digital_twin.models.twin_internal_state import TwinInternalState
 from src.digital_twin.physics.expected_behavior import ExpectedBehaviorModel
+from src.digital_twin.physics.estimator import AlphaFilterEstimator
 
 
 class DigitalTwinEngine:
@@ -25,9 +27,17 @@ class DigitalTwinEngine:
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml") -> None:
         self.residual_analyzer = ResidualAnalyzer(config_path=config_path)
         self.causal_analyzer = CausalAnalyzer()
+        self.estimator = AlphaFilterEstimator(alpha=0.2)
+        
+        # Internal states track physics inertia
+        self.healthy_internal_states: Dict[int, TwinInternalState] = {
+            1: TwinInternalState(timestamp=0.0),
+            2: TwinInternalState(timestamp=0.0),
+        }
+        
         self.twin_states: Dict[int, DigitalTwinState] = {
-            1: DigitalTwinState(engine_id="engine_1"),
-            2: DigitalTwinState(engine_id="engine_2"),
+            1: DigitalTwinState(engine_id="engine_1", healthy_internal_state=self.healthy_internal_states[1]),
+            2: DigitalTwinState(engine_id="engine_2", healthy_internal_state=self.healthy_internal_states[2]),
         }
         self.history_records: List[Dict[str, Any]] = []
         self.active_warnings: List[Dict[str, Any]] = []
@@ -50,16 +60,26 @@ class DigitalTwinEngine:
         """
         ctx = operating_context if operating_context is not None else {}
 
-        # 1. Derive Expected State from Module 01 physics
-        expected = ExpectedBehaviorModel.from_simulation_state(
-            sim_state=sim_state,
-            engine_index=engine_index,
-            timestamp=timestamp,
-            sequence_number=sequence_number,
-            propeller_state=propeller_state
-        )
+        # Compute time step (dt)
+        prev_healthy_internal = self.healthy_internal_states.get(engine_index, TwinInternalState(timestamp=timestamp))
+        dt = timestamp - prev_healthy_internal.timestamp
+        if dt <= 0:
+            dt = 0.05  # Default dt if time hasn't advanced or is first step
 
-        # 2. Derive Observed State from Module 02 validated telemetry pipeline
+        # 1. Predict Healthy Expected State
+        expected, next_healthy_internal = ExpectedBehaviorModel.predict_state(
+            prev_internal=prev_healthy_internal,
+            operating_context=ctx,
+            dt=dt,
+            engine_index=engine_index,
+            sequence_number=sequence_number
+        )
+        
+        # 1b. Store the independent healthy reference for the next timestep
+        # This MUST remain completely independent of physical telemetry
+        self.healthy_internal_states[engine_index] = next_healthy_internal
+
+        # 2. Derive Observed State from telemetry
         observed = self._derive_observed_state(
             pipeline=pipeline,
             telemetry_frame=telemetry_frame,
@@ -69,11 +89,16 @@ class DigitalTwinEngine:
             sequence_number=sequence_number,
             propeller_state=propeller_state
         )
+        
+        # 3. Synchronize: Produce the Estimated Actual State
+        # The estimator observes the telemetry and produces our best estimate of the *actual* physical engine state.
+        # This estimate does NOT feed back into the healthy model.
+        estimated_actual_internal = self.estimator.synchronize(next_healthy_internal, observed)
 
-        # 3. Calculate Residuals
+        # 4. Calculate Residuals (Expected vs Observed)
         residuals = self.residual_analyzer.analyze(expected, observed)
 
-        # 4. Perform Causal Deviation Analysis
+        # 5. Perform Causal Deviation Analysis
         causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
 
         # 5. Determine Twin Lifecycle Status
@@ -107,6 +132,8 @@ class DigitalTwinEngine:
             observed_state=observed,
             expected_state=expected,
             residual_state=residuals,
+            healthy_internal_state=next_healthy_internal,
+            estimated_actual_state=estimated_actual_internal,
             operating_context=ctx,
             data_quality=observed.data_quality,
             confidence=confidence,
