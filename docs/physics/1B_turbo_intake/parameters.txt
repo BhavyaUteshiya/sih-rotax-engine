@@ -1,0 +1,16 @@
+Parameter | Symbol | Value | Unit | Source | Classification | Purpose | Editable/Calibratable? | Notes
+---|---|---|---|---|---|---|---|---
+Turbo Inertia | $J_{turbo}$ | 0.0001 | kg·m² | Model Default | ESTIMATED | Shaft transient lag | Yes | Affects spool-up time. Small turbo assumption.
+Manifold Volume | $V_{map}$ | 0.005 | m³ | Model Default | ESTIMATED | Pressure response lag | Yes | ~5 Liters representing intake airbox & runners.
+Compressor Efficiency | $\eta_c$ | 0.70 | dimensionless | Common Practice | ESTIMATED | Compressor temp rise | Yes | Average isentropic efficiency across map.
+Turbine Efficiency | $\eta_t$ | 0.65 | dimensionless | Common Practice | ESTIMATED | Turbine power | Yes | Average isentropic efficiency.
+Compressor PR Factor | $k_{pr}$ | 6.67e-9 | s²/rad² | Derived | CALIBRATION | Max PR curve | Yes | Calibrated to hit PR ~2.5 at 15000 rad/s.
+Compressor Flow Factor | $k_{flow}$ | 6.67e-6 | kg/rad | Derived | CALIBRATION | Surrogate pumping | Yes | Maps RPM and PR margin to mass flow.
+Air Specific Heat | $c_{p,air}$ | 1005.0 | J/kg·K | Thermodynamics | VERIFIED | Heating calc | No | Standard air.
+Exhaust Specific Heat | $c_{p,exh}$ | 1150.0 | J/kg·K | Thermodynamics | APPROXIMATION | Turbine work | No | Typical combustion gas property.
+Air Gas Constant | $R_{air}$ | 287.05 | J/kg·K | CODATA | VERIFIED | Plenum gas state | No | Ideal gas constant for dry air.
+Air Specific Heat Ratio | $\gamma_{air}$ | 1.4 | dimensionless | Thermodynamics | VERIFIED | Compression ratio | No | Standard diatomic gas.
+Exhaust Specific Heat Ratio | $\gamma_{exh}$ | 1.33 | dimensionless | Thermodynamics | APPROXIMATION | Expansion ratio | No | Hot combustion gas.
+TCU I-Gain | $K_{i}$ | 0.0005 | 1/(Pa·s) | Surrogate | CALIBRATION | Wastegate integral | Yes | Eliminates steady-state MAP error.
+TCU P-Gain | $K_{p}$ | 0.0001 | 1/Pa | Surrogate | CALIBRATION | Wastegate response | Yes | Controls speed of wastegate opening.
+Startup Regularization | $\omega_{startup}$ | 10.0 | rad/s | Numerical Method | APPROXIMATION | Avoid div-by-zero | Yes | Linearizes startup torque computation.

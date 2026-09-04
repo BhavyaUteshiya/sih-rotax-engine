@@ -2,12 +2,24 @@
 
 This document records the exact physical equations implemented in the runtime atmosphere model (`src/digital_twin/physics/atmosphere.py`).
 
-## 1. Standard Temperature Lapse (Troposphere)
-- **Formula ID:** ATM-01
-- **Equation:** $T_{ISA} = T_0 - L \times h$
-- **Physical meaning:** The linear decrease in baseline temperature with altitude in the lowest layer of the atmosphere.
+## 0. Geopotential Altitude Conversion (ATM-00)
+- **Formula ID:** ATM-00
+- **Equation:** $h_{gp} = \frac{r_0 \times h}{r_0 + h}$
+- **Physical meaning:** Standard atmosphere equations integrate using constant gravity. Geopotential altitude mathematically accounts for the actual reduction in gravity with height, allowing the standard equations to treat gravity as a constant.
 - **Variables:**
   - $h$: Geometric altitude (m)
+- **Constants:**
+  - $r_0$: 6,356,766 m (Nominal Earth radius, ICAO Doc 7488)
+- **Source:** ICAO Standard Atmosphere (1993)
+- **Classification:** VERIFIED
+- **Location:** `src/digital_twin/physics/atmosphere.py:AtmosphereModel.calculate`
+
+## 1. Standard Temperature Lapse (Troposphere)
+- **Formula ID:** ATM-01
+- **Equation:** $T_{ISA} = T_0 - L \times h_{gp}$
+- **Physical meaning:** The linear decrease in baseline temperature with altitude in the lowest layer of the atmosphere.
+- **Variables:**
+  - $h_{gp}$: Geopotential altitude (m)
 - **Constants:**
   - $T_0$: 288.15 K (Sea level standard temperature)
   - $L$: 0.0065 K/m (Temperature lapse rate)
@@ -17,10 +29,10 @@ This document records the exact physical equations implemented in the runtime at
 
 ## 2. Standard Pressure (Troposphere)
 - **Formula ID:** ATM-02
-- **Equation:** $P = P_0 \times \left(1 - \frac{L \times h}{T_0}\right)^{\frac{g M}{R L}}$
+- **Equation:** $P = P_0 \times \left(1 - \frac{L \times h_{gp}}{T_0}\right)^{\frac{g M}{R L}}$
 - **Physical meaning:** The exponential decrease of static pressure due to the weight of the air column above, integrated over a linear temperature profile.
 - **Variables:**
-  - $h$: Geometric altitude (m)
+  - $h_{gp}$: Geopotential altitude (m)
 - **Constants:**
   - $P_0$: 101325.0 Pa (Sea level standard pressure)
   - $g$: 9.80665 m/s² (Standard gravity)
@@ -30,13 +42,13 @@ This document records the exact physical equations implemented in the runtime at
 - **Classification:** VERIFIED
 - **Location:** `src/digital_twin/physics/atmosphere.py:AtmosphereModel.calculate`
 
-## 3. Saturation Vapor Pressure (Magnus Formula)
+## 3. Saturation Vapor Pressure (Alduchov & Eskridge)
 - **Formula ID:** ATM-03
-- **Equation:** $P_{sat,hPa} = 6.1078 \times 10^{\frac{7.5 \times T_c}{T_c + 237.3}}$
+- **Equation:** $P_{sat,hPa} = 6.1094 \times \exp\left(\frac{17.625 \times T_c}{243.04 + T_c}\right)$
 - **Physical meaning:** The maximum partial pressure of water vapor that air can hold at a given temperature before condensation occurs.
 - **Variables:**
   - $T_c$: Actual ambient temperature (°C)
-- **Assumptions:** Valid for temperatures between -40°C and +50°C.
+- **Assumptions:** Valid for temperatures between -40°C and +50°C (water over liquid).
 - **Source:** Alduchov, O.A. and Eskridge, R.E., 1996. (Improved Magnus Form approximation)
 - **Classification:** VERIFIED (Widely accepted empirical approximation)
 - **Location:** `src/digital_twin/physics/atmosphere.py:AtmosphereModel.calculate`
@@ -73,6 +85,6 @@ This document records the exact physical equations implemented in the runtime at
   - $T$: Actual absolute temperature (K)
 - **Constants:**
   - $\gamma$: 1.4 (Heat capacity ratio for dry air)
-- **Assumptions:** Assumes dry air. The error induced by moisture is negligible for this simulation.
-- **Classification:** VERIFIED
+- **Assumptions:** This is a dry-air, fixed-gamma approximation. The error induced by moisture is negligible for this simulation, but it is explicitly NOT a full humid-air speed of sound calculation.
+- **Classification:** APPROXIMATION
 - **Location:** `src/digital_twin/physics/atmosphere.py:AtmosphereModel.calculate`

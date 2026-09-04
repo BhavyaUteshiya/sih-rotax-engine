@@ -1,0 +1,30 @@
+SIH26054 Digital Twin — Master Physics Formula Registry
+
+This is the master index of all physics and empirical formulas implemented in the codebase.
+
+========================================================================================================================
+Atmosphere (Phase 1A)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+ATM-00 | Atmosphere | h_gp = (r_0 * h) / (r_0 + h)                    | Geopotential Alt. Conversion       | VERIFIED
+ATM-01 | Atmosphere | T = T_0 - L * h_gp                              | ISA Troposphere Temperature Lapse  | VERIFIED
+ATM-02 | Atmosphere | P = P_0 * (1 - (L*h_gp)/T_0) ^ (g*M / R*L)      | ISA Troposphere Hydrostatic Press. | VERIFIED
+ATM-03 | Atmosphere | P_sat = 6.1094 * exp(17.625*Tc / (243.04+Tc))   | Saturation Vapor Pressure (Magnus) | VERIFIED
+ATM-04 | Atmosphere | P_v = P_sat * (RH / 100)                        | Actual Vapor Partial Pressure      | VERIFIED
+ATM-05 | Atmosphere | rho = (P - P_v)/(R_d*T) + (P_v)/(R_v*T)         | Moist Air Density                  | VERIFIED
+ATM-06 | Atmosphere | a = sqrt(gamma * R_d * T)                       | Speed of Sound (Dry Approx)        | APPROX
+========================================================================================================================
+Turbo / Intake (Phase 1B)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+TRB-01 | Turbo/Int. | P_t = m_t*cp*T_exh*eta*(1-(P_amb/P_exh)^...)    | Turbine Isentropic Power           | VERIFIED
+TRB-02 | Turbo/Int. | PR_max = 1 + k_pr * w^2                         | Compressor Max PR Surrogate        | CALIBRAT
+TRB-03 | Turbo/Int. | m_c = k_flow * w * max(0, PR_max - PR_act)      | Compressor Mass Flow Surrogate     | CALIBRAT
+TRB-04 | Turbo/Int. | T_out = T_amb * (1 + (PR^... - 1)/eta_c)        | Compressor Temp Rise               | VERIFIED
+TRB-05 | Turbo/Int. | dw/dt = (P_t - P_c - P_loss)/(J * w)            | Turbo Shaft Dynamics               | VERIFIED
+TRB-06 | Turbo/Int. | dP/dt = (R*T_map / V_map) * (m_c - m_eng)       | Intake Plenum Pressure State       | VERIFIED
+========================================================================================================================
+
+*(Downstream modules like 1C-Airflow and 1D-Combustion will be registered here once implemented.)*

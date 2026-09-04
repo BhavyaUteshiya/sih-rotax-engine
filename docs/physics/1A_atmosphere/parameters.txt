@@ -1,0 +1,21 @@
+Phase 1A: Atmosphere Parameters
+
+This document details the constants, physical parameters, and boundaries used within the AtmosphereModel.
+
+========================================================================================================================
+| Parameter                 | Symbol  | Value       | Unit     | Source                   | Classification | Editable? |
+========================================================================================================================
+| Standard Gravity          | g       | 9.80665     | m/s^2    | ICAO Standard Atmosphere | VERIFIED       | No        |
+| Universal Gas Constant    | R       | 8.3144598   | J/(mol K)| CODATA                   | VERIFIED       | No        |
+| Dry Air Molar Mass        | M_d     | 0.0289644   | kg/mol   | ICAO Standard Atmosphere | VERIFIED       | No        |
+| Specific Gas Const (Dry)  | R_d     | 287.0528    | J/(kg K) | Derived (R/M_d)          | DERIVED        | No        |
+| Specific Gas Const (Vap)  | R_v     | 461.495     | J/(kg K) | WMO                      | VERIFIED       | No        |
+| Heat Capacity Ratio       | gamma   | 1.4         | -        | Standard Physics         | VERIFIED       | No        |
+| Sea Level Temp (ISA)      | T_0     | 288.15      | K        | ICAO Standard Atmosphere | VERIFIED       | No        |
+| Sea Level Press (ISA)     | P_0     | 101325.0    | Pa       | ICAO Standard Atmosphere | VERIFIED       | No        |
+| Temperature Lapse Rate    | L       | 0.0065      | K/m      | ICAO Standard Atmosphere | VERIFIED       | No        |
+| Tropopause Limit          | h_max   | 11000.0     | m        | ICAO Standard Atmosphere | VERIFIED       | No        |
+========================================================================================================================
+
+Separation of Concerns
+Note that these are entirely universal and standard atmospheric constants. There are zero Rotax 914 engine-specific parameters or arbitrary engineering estimates in this file. The environmental physics layer is entirely general.

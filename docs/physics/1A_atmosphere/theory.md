@@ -8,6 +8,10 @@ This document explains the physical theory behind the selected atmospheric model
 ## The Standard Atmosphere
 The **International Standard Atmosphere (ISA)** is an atmospheric model of how pressure, temperature, density, and viscosity of the Earth's atmosphere change over a wide range of altitudes. For our prototype simulation envelope (up to approximately 30,000 ft or 9,144 m), we only need to model the lowest layer of the atmosphere: the **Troposphere** (which extends up to 11,000 m).
 
+1. **Geopotential Altitude Conversion**: As Earth's gravity decreases with altitude, the standard atmosphere model uses *geopotential altitude* ($h_{gp}$) instead of pure geometric altitude to maintain simplified hydrostatic integration.
+2. **Tropospheric Lapse Rate**: The temperature drops linearly with geopotential altitude up to 11,000 meters.
+3. **Hydrostatic Equilibrium**: The pressure drops exponentially as a function of temperature and geopotential altitude.
+
 ### Temperature Variation with Altitude
 In the Troposphere, temperature decreases linearly with altitude. This rate of decrease is called the **Temperature Lapse Rate ($L$)**. In the ISA model, this lapse rate is defined as exactly 0.0065 K/m.
 Therefore, the standard temperature at any altitude $h$ is:

@@ -21,8 +21,8 @@ This document records the external authoritative sources used specifically for t
 ## [REF-ATM-03] Alduchov and Eskridge Magnus Formula
 - **Title:** Improved Magnus Form Approximation of Saturation Vapor Pressure
 - **Author/Organization:** Alduchov, O.A. and Eskridge, R.E. (Journal of Applied Meteorology)
-- **URL:** [https://doi.org/10.1175/1520-0450(1996)035<0601:IMFAOS>2.0.CO;2](https://doi.org/10.1175/1520-0450(1996)035<0601:IMFAOS>2.0.CO;2)
+- **URL:** [https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2](https://doi.org/10.1175/1520-0450(1996)035%3C0601:IMFAOS%3E2.0.CO;2)
 - **Source Type:** Peer-reviewed Journal Article (1996)
-- **Information Used:** The $6.1078 \times 10^{\frac{7.5 \times T}{T + 237.3}}$ coefficients for saturation vapor pressure of water over liquid.
+- **Information Used:** The $e_s(T) = 6.1094 \times \exp\left(\frac{17.625 \times T}{243.04 + T}\right)$ equation for saturation vapor pressure of water over liquid.
 - **Authority Level:** HIGH (Standard meteorological approximation)
 - **Date Accessed:** September 2026
