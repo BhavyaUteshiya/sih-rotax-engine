@@ -425,7 +425,7 @@ lubrication:
 
 propeller:
   diameter_m:
-    value: 1.90                            # 1.90 m diameter 3-blade constant-speed propeller
+    value: 1.70                            # 1.70 m diameter 3-blade constant-speed propeller
     unit: "METER"
     classification: "REPORTED"
     source: "PUBLIC_DEFENSE_SPECS"

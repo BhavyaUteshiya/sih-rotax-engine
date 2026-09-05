@@ -57,7 +57,7 @@ def test_user_dashboard_html_contains_no_test_injection_panels():
     """Verifies that index.html contains zero user-facing test-mode fault injection controls."""
     html_path = Path("app/static/index.html")
     assert html_path.exists()
-    content = html_path.read_text()
+    content = html_path.read_text(encoding="utf-8")
 
     forbidden_ui_strings = [
         "DIGITAL TWIN TEST MODE — CONTROLLED DEVIATION CONTROL",

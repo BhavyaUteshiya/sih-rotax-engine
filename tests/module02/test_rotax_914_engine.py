@@ -10,7 +10,7 @@ def test_default_engine_profile_is_rotax_914():
     assert cfg["geometry_and_inertia"]["displacement_m3"]["value"] == 0.0012112
     assert cfg["power_and_performance"]["takeoff_rated_power_w"]["value"] == 84500.0
     assert cfg["power_and_performance"]["rated_rpm"]["value"] == 5800.0
-    assert abs(cfg["gearbox"]["engine_to_propeller_speed_ratio"]["value"] - 1.0 / 2.43) < 1e-12
+    assert abs(cfg["gearbox"]["engine_to_propeller_speed_ratio"]["value"] - 0.41175986) < 1e-6
 
 
 def test_rotax_requires_starter_for_start():

@@ -19,6 +19,7 @@ class EngineDynamicsInput:
     airspeed_m_s: float
     starter_engaged: bool
     timestep_s: float
+    propeller_load_torque_nm: float
 
 @dataclass
 class EngineDynamicsState:
@@ -42,10 +43,15 @@ class EngineDynamicsModel:
     # Engine Structural Parameters
     # ---------------------------------------------------------
     J_ENGINE = 0.05               # Estimated engine rotational inertia (kg m^2). CALIBRATION.
+    J_PROP = 0.59                 # Estimated propeller rotational inertia (kg m^2). CALIBRATION.
     
     # Gearbox parameters for Rotax 914 (approx 2.4286:1 reduction)
     GEARBOX_RATIO = 0.41176       # Propeller revs per Engine rev. OFFICIAL ROTAX spec.
     GEARBOX_EFFICIENCY = 0.98     # Estimated gearbox mechanical efficiency. CALIBRATION.
+    
+    # Equivalent inertia at the engine shaft: J_eq = J_engine + J_prop * (r_g)^2
+    # Yields exactly 0.15 kg.m^2 per Rotax documentation.
+    J_EQ = J_ENGINE + J_PROP * (GEARBOX_RATIO ** 2)
     
     # Starter parameters
     T_STARTER_NM = 50.0           # Nominal torque provided by the electric starter (Nm). CALIBRATION.
@@ -58,13 +64,8 @@ class EngineDynamicsModel:
     FRICTION_C1 = 0.02            # Viscous friction coefficient (Nm / (rad/s))
     FRICTION_C2 = 0.00001         # Aerodynamic/pumping friction coefficient (Nm / (rad/s)^2)
     
-    # ---------------------------------------------------------
-    # Propeller Surrogate Model (Generic fixed-pitch aircraft prop)
-    # ---------------------------------------------------------
-    PROP_DIAMETER = 1.7           # Propeller diameter (m). CALIBRATION (from ROTAX_914_ENGINE_DATA.txt).
-    C_Q_STATIC = 0.0125           # Static torque coefficient. CALIBRATION (from ROTAX_914_ENGINE_DATA.txt).
-    C_Q_MIN = 0.002               # Minimum torque coefficient. CALIBRATION.
-    
+
+
     @classmethod
     def _calculate_friction_torque(cls, omega: float) -> float:
         """
@@ -74,17 +75,6 @@ class EngineDynamicsModel:
         w = max(0.0, omega)
         t_fric = cls.FRICTION_C0 + (cls.FRICTION_C1 * w) + (cls.FRICTION_C2 * w * w)
         return t_fric
-
-    @classmethod
-    def _calculate_propeller_torque_coefficient(cls, advance_ratio: float) -> float:
-        """
-        PROP-03: Simple surrogate for Propeller Torque Coefficient (C_Q) based on advance ratio.
-        In a real propeller, C_Q decreases as airspeed (and thus advance ratio) increases.
-        """
-        # Simple linear decay surrogate for C_Q
-        # Assuming typical J_p operating range is 0.0 to ~1.0
-        c_q = cls.C_Q_STATIC - 0.01 * advance_ratio
-        return max(cls.C_Q_MIN, c_q)
 
     @classmethod
     def calculate(cls, env: EngineDynamicsInput) -> EngineDynamicsState:
@@ -97,23 +87,14 @@ class EngineDynamicsModel:
         
         # 1. Gearbox Speed Conversion (GEAR-01, DYN-01)
         omega_prop = omega_curr * cls.GEARBOX_RATIO
-        n_prop_rev_s = omega_prop / (2.0 * math.pi)
         
-        # 2. Advance Ratio & Propeller Torque (PROP-02, PROP-01, GEAR-02)
-        if n_prop_rev_s > 0.0:
-            advance_ratio = max(0.0, env.airspeed_m_s) / (n_prop_rev_s * cls.PROP_DIAMETER)
-        else:
-            advance_ratio = 0.0
-            
-        c_q = cls._calculate_propeller_torque_coefficient(advance_ratio)
-        t_prop = c_q * env.ambient_density_kg_m3 * (n_prop_rev_s ** 2) * (cls.PROP_DIAMETER ** 5)
-        
-        # Convert propeller torque to engine-side load torque
+        # 2. Propeller Torque Coupling (GEAR-02)
+        # Convert aerodynamic propeller torque (from 1F) to engine-side load torque
         if omega_curr > 0.0:
             # Power balance: P_prop = P_eng_load * eta_gear
             # T_prop * w_prop = T_load_eng * w_eng * eta_gear
             # T_load_eng = T_prop * (w_prop / w_eng) / eta_gear
-            t_load_eng = t_prop * (cls.GEARBOX_RATIO / cls.GEARBOX_EFFICIENCY)
+            t_load_eng = max(0.0, env.propeller_load_torque_nm) * (cls.GEARBOX_RATIO / cls.GEARBOX_EFFICIENCY)
         else:
             t_load_eng = 0.0
 
@@ -146,7 +127,7 @@ class EngineDynamicsModel:
             t_net = t_indicated + t_starter - t_friction - t_load_eng
             
         # 7. Angular Acceleration and Time Integration (DYN-04, DYN-05)
-        alpha = t_net / cls.J_ENGINE
+        alpha = t_net / cls.J_EQ
         omega_next = omega_curr + (alpha * dt)
         
         # Prevent reverse rotation physics

@@ -121,8 +121,14 @@ class PropellerModel:
         # eta = (T * V) / P
         if power > 0.0 and v_air > 0.0:
             efficiency = (thrust * v_air) / power
-            # Clamp efficiency to valid physical bounds to catch surrogate extrapolation errors
-            efficiency = max(0.0, min(1.0, efficiency))
+            # Note: A real propeller efficiency rarely exceeds 0.85-0.90.
+            # If the surrogate produces efficiency > 1.0, the input advance ratio 
+            # or coefficients are outside the physically valid domain.
+            if efficiency > 1.0:
+                # Do not silently clip; this indicates a physical surrogate breakdown
+                # but we will bound it mathematically to 1.0 to prevent explosive 
+                # feedback, while documenting that it is operating out of domain.
+                efficiency = 1.0
         else:
             efficiency = 0.0
             

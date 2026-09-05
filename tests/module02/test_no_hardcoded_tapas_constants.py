@@ -36,6 +36,6 @@ def test_no_hardcoded_tapas_numbers_in_source_code():
                             continue
                         if forbidden in stripped:
                             # Allow if part of a dataclass default in models/states.py or docstring
-                            if "models/states.py" in filepath or "docstring" in stripped:
+                            if "models" in filepath and "states.py" in filepath or "docstring" in stripped:
                                 continue
                             pytest.fail(f"Hardcoded TAPAS constant '{forbidden}' found in {filepath}:{idx}: {line}")

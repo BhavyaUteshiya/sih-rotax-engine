@@ -51,7 +51,7 @@ class PropulsionWearVibrationModel:
         air_density_kg_m3: float,
         speed_ratio: float = 0.65,
         gearbox_efficiency: float = 0.97,
-        diameter_m: float = 1.90,
+        diameter_m: float = 1.70,
         torque_coefficient_cq: float = 0.014,
         thrust_coefficient_ct: float = 0.085
     ) -> Tuple[float, float, float, float, float, float]:

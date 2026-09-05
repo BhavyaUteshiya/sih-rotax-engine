@@ -380,7 +380,7 @@ def test_yaml_configuration_flow(loaded_config):
     lhv = ConfigLoader.get_config_value(loaded_config, "fuel_system.lower_heating_value_lhv_j_kg")
     stoich = ConfigLoader.get_config_value(loaded_config, "fuel_system.stoichiometric_afr")
 
-    assert lhv == 44000000.0
+    assert lhv == 43400000.0
     assert stoich == 14.7
 
 

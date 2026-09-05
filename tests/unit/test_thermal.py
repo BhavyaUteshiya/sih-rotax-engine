@@ -206,16 +206,16 @@ class TestThermalModel(unittest.TestCase):
 
     # === 18. Timestep validation ===
     def test_18_timestep_validation(self):
-        """18. dt <= 0 produces no state change"""
+        """18. dt <= 0 produces ValueError"""
         env = copy.deepcopy(self.nominal_input)
         env.timestep_s = 0.0
-        state = ThermalModel.calculate(env)
-        self.assertAlmostEqual(state.cht_temperature_k, env.cht_temperature_k)
+        with self.assertRaises(ValueError):
+            ThermalModel.calculate(env)
 
         env2 = copy.deepcopy(self.nominal_input)
         env2.timestep_s = -1.0
-        state2 = ThermalModel.calculate(env2)
-        self.assertAlmostEqual(state2.cht_temperature_k, env2.cht_temperature_k)
+        with self.assertRaises(ValueError):
+            ThermalModel.calculate(env2)
 
     # === 19. Energy/heat-flow sign consistency ===
     def test_19_energy_sign_consistency(self):

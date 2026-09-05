@@ -127,7 +127,7 @@ class PropellerState:
     advance_ratio: float = 0.0                 # J_prop = V / (n * D)
     thrust_coefficient_ct: float = 0.085       # Aerodynamic thrust coefficient Ct
     torque_coefficient_cq: float = 0.014       # Aerodynamic torque coefficient Cq
-    diameter_m: float = 1.90                   # Propeller diameter D_prop (m)
+    diameter_m: float = 1.70                   # Propeller diameter D_prop (m)
     load_torque_n_m: float = 0.0               # Aerodynamic load torque on propeller shaft T_prop (N*m)
     thrust_n: float = 0.0                      # Aerodynamic thrust F_thrust (N)
     reflected_engine_load_n_m: float = 0.0       # Reflected load torque on engine shaft (N*m)

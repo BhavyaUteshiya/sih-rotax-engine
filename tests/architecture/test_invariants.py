@@ -328,7 +328,14 @@ def test_16_mission_id_contract():
 
 def test_17_pipeline_healthy_storage_no_name_error(temp_dir):
     """17. Regression test: Verify healthy storage in IngestionPipeline without NameError or false storage failures."""
-    pipeline = IngestionPipeline()
+    config_loader = ConfigLoader()
+    base_acq_config = config_loader.load_acquisition_config()
+    base_acq_config["storage"] = {
+        "raw_store_path": str(temp_dir / "raw.jsonl"),
+        "normalized_store_path": str(temp_dir / "norm.jsonl"),
+    }
+    config_loader.load_acquisition_config = lambda: base_acq_config
+    pipeline = IngestionPipeline(config_loader=config_loader)
 
     assert pipeline.storage_recovery.state == StorageRecoveryState.NORMAL
 

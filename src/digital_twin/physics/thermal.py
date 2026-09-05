@@ -133,7 +133,9 @@ class ThermalModel:
         Advances the thermal state by one timestep using explicit Euler integration.
         """
         # --- Input validation ---
-        dt = max(0.0, env.timestep_s)
+        dt = env.timestep_s
+        if dt <= 0.0:
+            raise ValueError(f"Timestep must be strictly positive, got {dt}")
 
         t_cht = env.cht_temperature_k
         t_oil = env.oil_temperature_k

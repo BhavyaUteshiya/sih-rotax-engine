@@ -54,7 +54,7 @@ replacements = [
         "  gearbox_efficiency:\n    value: 0.97\n    unit: RATIO\n    classification: ESTIMATED\n    source: ROTAX_914_REDUCED_ORDER_MODEL"
     ),
     (
-        "  diameter_m:\n    value: 1.9\n    unit: METER\n    classification: ASSUMED\n    source: EXISTING_AIRFRAME_PROPULSION_GEOMETRY",
+        "  diameter_m:\n    value: 1.7\n    unit: METER\n    classification: ASSUMED\n    source: EXISTING_AIRFRAME_PROPULSION_GEOMETRY",
         "  diameter_m:\n    value: 1.7\n    unit: METER\n    classification: SYNTHETIC\n    source: ROTAX_914_PROPULSION_CALIBRATION"
     ),
     (
