@@ -4,7 +4,7 @@ SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 
 @dataclass
@@ -41,6 +41,7 @@ class EstimatedActualState:
     thrust_n: float = 0.0
 
     estimation_confidence: float = 1.0
+    covariance: Optional[List[List[float]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes EstimatedActualState to a dictionary."""
@@ -69,4 +70,5 @@ class EstimatedActualState:
             "propeller_load_nm": round(self.propeller_load_nm, 2),
             "thrust_n": round(self.thrust_n, 2),
             "estimation_confidence": self.estimation_confidence,
+            "covariance": self.covariance,
         }

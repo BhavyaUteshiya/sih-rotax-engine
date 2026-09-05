@@ -100,3 +100,16 @@ THERM-08| Thermal   | T_next = T_current + (dT/dt) * dt               | Explicit
 ========================================================================================================================
 
 *(Downstream Phase 1 System Integration to follow.)*
+
+========================================================================================================================
+State Estimation (Phase 2D UKF)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+EST-01 | State Est. | x_{k|k-1} = f(x_{k-1|k-1}, u_k)                 | UKF Process/Prediction Model       | UKF MATH
+EST-02 | State Est. | P_{k|k-1} = W_c * (X - x) * (X - x)^T + Q       | UKF A Priori Covariance            | UKF MATH
+EST-03 | State Est. | z_{k|k-1} = h(x_{k|k-1}, u_k)                   | UKF Measurement Model              | UKF MATH
+EST-04 | State Est. | K_k = P_{xz} * (P_{zz})^{-1}                    | Kalman Gain                        | UKF MATH
+EST-05 | State Est. | x_{k|k} = x_{k|k-1} + K_k * (z_k - z_{k|k-1})   | UKF State Measurement Update       | UKF MATH
+EST-06 | State Est. | P_{k|k} = P_{k|k-1} - K_k * P_{zz} * K_k^T      | UKF A Posteriori Covariance        | UKF MATH
+========================================================================================================================

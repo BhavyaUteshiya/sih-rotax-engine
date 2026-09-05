@@ -14,6 +14,8 @@ from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStat
 from src.digital_twin.models.operating_context import OperatingContext
 from src.digital_twin.physics.healthy_reference_model import HealthyReferenceModel
 from src.digital_twin.services.state_synchronizer import StateSynchronizer
+from src.digital_twin.models.estimated_actual_state import EstimatedActualState
+from src.digital_twin.estimation.state_estimator import StateEstimator
 
 
 class DigitalTwinEngine:
@@ -40,6 +42,12 @@ class DigitalTwinEngine:
         self.history_records: List[Dict[str, Any]] = []
         self.active_warnings: List[Dict[str, Any]] = []
         self.last_causal_analysis: Dict[int, Dict[str, Any]] = {1: {}, 2: {}}
+        
+        # Phase 2D State Estimators
+        self.estimators: Dict[int, StateEstimator] = {
+            1: StateEstimator(),
+            2: StateEstimator()
+        }
 
     def process_step(
         self,
@@ -103,6 +111,11 @@ class DigitalTwinEngine:
                 data_quality = DigitalTwinDataQuality.DEGRADED
                 confidence = 0.0
             warnings = []
+            
+            # Run estimator in prediction-only mode by passing empty observed state
+            empty_observed = ObservedState()
+            estimated_state = self.estimators[engine_index].estimate(expected, empty_observed, dt)
+            estimated_state.estimation_confidence = 0.0
         else:
             # Update sequence tracker on success
             if observed.sequence_number is not None:
@@ -131,6 +144,9 @@ class DigitalTwinEngine:
                 data_quality = DigitalTwinDataQuality.GOOD
                 confidence = 1.0
                 warnings = []
+                
+            # Phase 2D State Estimation (UKF)
+            estimated_state = self.estimators[engine_index].estimate(expected, observed, dt)
 
         # 8. Package Master Digital Twin State
         state = DigitalTwinState(
@@ -140,6 +156,7 @@ class DigitalTwinEngine:
             operating_context=operating_context,
             observed_state=observed,
             healthy_expected_state=expected,
+            estimated_actual_state=estimated_state,
             residual_state=residuals,
             synchronization_result=sync_result,
             data_quality=data_quality,
