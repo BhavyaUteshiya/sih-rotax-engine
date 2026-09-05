@@ -25,7 +25,7 @@ def test_twin_engine_data_quality_mapping():
     )
     state = engine.process_step(context, 1.0, observed_invalid)
     assert state.data_quality == DigitalTwinDataQuality.INVALID
-    assert state.status == DigitalTwinStatus.DATA_QUALITY_DEGRADED
+    assert state.status == DigitalTwinStatus.SYNC_FAILED
     assert state.confidence == 0.5
 
     # 3. Test DEGRADED

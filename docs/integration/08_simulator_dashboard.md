@@ -1,6 +1,6 @@
 # SIH26054 Simulator Control Dashboard
 
-The pre-Digital-Twin control station is implemented in `app/` and runs on the existing Module 02 master simulator plus Module 02 -> CAN -> Module 01 integration path.
+The pre-Digital-Twin control station is implemented in `app/` and runs on the existing physics simulator plus Simulator -> CAN -> Digital Twin integration path.
 
 ## Start
 
@@ -24,6 +24,6 @@ The dashboard does **not** expose EGT, CHT, AFR, oil pressure, vibration, wear, 
 
 ## Data path
 
-`Dashboard controls -> ThermodynamicEngineRunner -> 100 Hz physics -> 50 Hz telemetry -> CAN transport -> Module 01 bridge -> normalized telemetry -> dataset export`.
+`Dashboard controls -> ThermodynamicEngineRunner -> 100 Hz physics -> 50 Hz telemetry -> CAN transport -> Digital Twin bridge -> normalized telemetry -> dataset export`.
 
-Module 01 remains frozen. The dashboard is a frontend/control layer and does not bypass the ingestion contract.
+The Digital Twin Physics remains authoritative. The dashboard is a frontend/control layer and does not bypass the ingestion contract.

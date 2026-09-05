@@ -8,4 +8,4 @@ Every integration execution tracks comprehensive telemetry quality metrics:
 - `records_ingested`: Total packets successfully ingested by IngestionPipeline.
 - `records_failed`: Total ingestion failures.
 - `records_dropped`: Total packets dropped due to transport backpressure.
-- `records_persisted`: Total valid measurements written to Module 01 storage.
+- `records_persisted`: Total valid measurements written to persistence storage.

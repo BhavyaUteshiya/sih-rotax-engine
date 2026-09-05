@@ -35,7 +35,7 @@ def test_default_state_validity():
     assert exp.rpm == 0.0   # Healthy expectations default to physical 0
     assert est.rpm == 0.0
     assert res.rpm is None
-    assert dt.status == DigitalTwinStatus.SYNCHRONIZED
+    assert dt.status == DigitalTwinStatus.WAITING_FOR_DATA
 
 
 def test_complete_state_construction_and_isolation():

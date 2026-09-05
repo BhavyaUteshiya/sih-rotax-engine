@@ -27,7 +27,7 @@ Phase 1 implements a physical Digital Twin of the Rotax 914 UL-F aero piston eng
    - Driven by: Engine RPM (1E), True Airspeed (TAS), Atmosphere (1A).
 
 6. **1E: Engine Dynamics** (`EngineDynamicsModel`)
-   - Solves the coupled rotational inertia system ($J_{eq} = J_{engine} + J_{prop} / r_g^2$).
+   - Solves the coupled rotational inertia system ($J_{eq} = J_{engine} + J_{prop} * r_g^2$).
    - Calculates angular acceleration based on net torque (Combustion Torque - Propeller Load - Friction).
    - Driven by: Combustion (1D), Propeller (1F).
 
@@ -40,5 +40,5 @@ The `DigitalTwinSimulator` acts as the master orchestrator, maintaining a `Simul
 
 ## Key Design Principles
 - **Strict Single Ownership:** Each physical quantity (e.g., mass flow, torque) has exactly one authoritative source.
-- **Physical Accuracy:** Conservation of mass and energy are maintained across interfaces. No magic constants without physical backing.
+- **Physical Accuracy:** Conservation of mass and energy are maintained across interfaces. Engineering surrogates and empirical calibrations are used when analytical solutions are intractable.
 - **No Internal Coupling:** Physics modules are purely functional (where applicable) and decoupled. They receive simple input structs and return output structs.

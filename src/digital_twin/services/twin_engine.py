@@ -13,6 +13,7 @@ from src.digital_twin.models.residual_state import ResidualState
 from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStatus, DigitalTwinDataQuality
 from src.digital_twin.models.operating_context import OperatingContext
 from src.digital_twin.physics.healthy_reference_model import HealthyReferenceModel
+from src.digital_twin.services.state_synchronizer import StateSynchronizer
 
 
 class DigitalTwinEngine:
@@ -34,6 +35,8 @@ class DigitalTwinEngine:
             1: HealthyReferenceModel(engine_index=1),
             2: HealthyReferenceModel(engine_index=2),
         }
+        self.synchronizer = StateSynchronizer()
+        self.last_sequence: Dict[int, int] = {1: -1, 2: -1}
         self.history_records: List[Dict[str, Any]] = []
         self.active_warnings: List[Dict[str, Any]] = []
 
@@ -65,47 +68,72 @@ class DigitalTwinEngine:
         else:
              observed = observed_state
 
-        # 3. Calculate Residuals
-        residuals = self.residual_analyzer.analyze(expected, observed)
-
-        # 4. Perform Causal Deviation Analysis
-        causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
-
-        # 5. Determine Twin Lifecycle Status
-        if observed.data_quality == "INSUFFICIENT_DATA":
-            status = DigitalTwinStatus.INSUFFICIENT_DATA
-            data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
-            confidence = 0.0
+        # 3. Synchronize Observed and Expected (Phase 2C)
+        sync_result = self.synchronizer.synchronize(
+            expected=expected,
+            observed=observed,
+            context=operating_context,
+            last_sequence_number=self.last_sequence[engine_index]
+        )
+        
+        # 4. Only Calculate Residuals if Synchronized
+        if not sync_result.is_synchronized:
+            # Bypass downstream evaluation if we cannot align the signals deterministically.
+            residuals = ResidualState()
+            causal_res = {}
+            
+            # Map quality based on sync result
+            if sync_result.quality_effect == "INVALID":
+                status = DigitalTwinStatus.SYNC_FAILED
+                data_quality = DigitalTwinDataQuality.INVALID
+                confidence = 0.5
+            elif sync_result.quality_effect == "INSUFFICIENT_DATA":
+                status = DigitalTwinStatus.INSUFFICIENT_DATA
+                data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
+                confidence = 0.0
+            else:
+                status = DigitalTwinStatus.SYNC_FAILED
+                data_quality = DigitalTwinDataQuality.DEGRADED
+                confidence = 0.0
             warnings = []
-        elif observed.data_quality == "INVALID":
-            status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
-            data_quality = DigitalTwinDataQuality.INVALID
-            confidence = 0.5
-            warnings = self._generate_warning_events(residuals, causal_res, engine_index)
-        elif residuals.warnings_count > 0:
-            status = DigitalTwinStatus.DEVIATION_DETECTED
-            data_quality = DigitalTwinDataQuality.GOOD if observed.data_quality == "GOOD" else DigitalTwinDataQuality.DEGRADED
-            confidence = 0.85
-            warnings = self._generate_warning_events(residuals, causal_res, engine_index)
-        elif observed.data_quality == "DEGRADED":
-            status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
-            data_quality = DigitalTwinDataQuality.DEGRADED
-            confidence = 0.7
-            warnings = self._generate_warning_events(residuals, causal_res, engine_index)
         else:
-            status = DigitalTwinStatus.SYNCHRONIZED
-            data_quality = DigitalTwinDataQuality.GOOD
-            confidence = 1.0
-            warnings = []
+            # Update sequence tracker on success
+            if observed.sequence_number is not None:
+                self.last_sequence[engine_index] = observed.sequence_number
+                
+            # 5. Calculate Residuals
+            residuals = self.residual_analyzer.analyze(expected, observed)
+    
+            # 6. Perform Causal Deviation Analysis
+            causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
+    
+            # 7. Determine Twin Lifecycle Status based on Analysis & Sync Result
+            if sync_result.status == "DEGRADED_OBSERVATION" or residuals.warnings_count > 0:
+                if residuals.warnings_count > 0:
+                    status = DigitalTwinStatus.DEVIATION_DETECTED
+                    data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
+                    confidence = 0.85
+                else:
+                    status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
+                    data_quality = DigitalTwinDataQuality.DEGRADED
+                    confidence = 0.7
+                warnings = self._generate_warning_events(residuals, causal_res, engine_index)
+            else:
+                status = DigitalTwinStatus.SYNCHRONIZED
+                data_quality = DigitalTwinDataQuality.GOOD
+                confidence = 1.0
+                warnings = []
 
-        # 7. Package Master Digital Twin State
+        # 8. Package Master Digital Twin State
         state = DigitalTwinState(
             timestamp=timestamp,
             engine_id=f"engine_{engine_index}",
             aircraft_id="rotax_914_uav",
+            operating_context=operating_context,
             observed_state=observed,
             healthy_expected_state=expected,
             residual_state=residuals,
+            synchronization_result=sync_result,
             data_quality=data_quality,
             confidence=confidence,
             status=status,

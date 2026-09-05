@@ -1,9 +1,9 @@
 # configs/digital_twin_config.yaml
-# Module 03 Digital Twin Phase 1 Authoritative Thresholds Configuration
-# Exactly 18 Authoritative Internal Parameters
+# Digital Twin Core Authoritative Thresholds Configuration
+# Exactly 19 Authoritative Internal Parameters
 
 metadata:
-  subsystem: "DIGITAL_TWIN_PHASE_1"
+  subsystem: "DIGITAL_TWIN_CORE"
   config_version: "1.0.0"
   model_id: "ROTAX_914_DIGITAL_TWIN_BASELINE"
 
@@ -68,6 +68,15 @@ digital_twin:
       tolerance_type: "ABSOLUTE"
       debounce_sec: 2.0
       unit: "JOULE"
+      classification: "ESTIMATED"
+      calibration_required: true
+      source: "ENGINEERING_ESTIMATE"
+
+    combustion_efficiency:
+      value: 0.05
+      tolerance_type: "ABSOLUTE"
+      debounce_sec: 2.0
+      unit: "RATIO"
       classification: "ESTIMATED"
       calibration_required: true
       source: "ENGINEERING_ESTIMATE"

@@ -6,4 +6,4 @@ The transport layer abstracts CAN communication across development and execution
 2. **SocketCANTransport**: Binds to Linux SocketCAN sockets (`vcan0`/`can0`), falling back to `InMemoryTransport` if native CAN sockets are unsupported on host OS.
 
 ## Wire Payload Integrity
-Raw CAN payloads undergo SHA-256 calculation (`compute_payload_sha256(raw_bytes)`), creating immutable `DeepImmutableRawPacket` instances for Module 01 ingestion.
+Raw CAN payloads undergo SHA-256 calculation (`compute_payload_sha256(raw_bytes)`), creating immutable `DeepImmutableRawPacket` instances for downstream Digital Twin ingestion.

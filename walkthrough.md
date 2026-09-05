@@ -22,7 +22,7 @@ Phase 1F implements the final physical subsystem for the Phase 1 Physical Founda
 ### 4. Deferred Items Handled
 - **1D Rated-Condition Fuel Validation:** Tightened the fuel flow bounds in `test_combustion.py` to assert consumption closer to the ~33 L/h real-world Rotax metric.
 - **1E Placeholder Tests:** Formally deferred the integration tests in `test_engine_dynamics.py` with docstrings explicitly moving system-wide regression into the Phase 1 Integration Phase.
-- **1E Equivalent Inertia:** Documented the exact coupled inertia relationship ($J_{eq} = J_{engine} + J_{prop} / r_g^2$) in the implementation notes, enforcing architectural decoupling until full system integration.
+- **1E Equivalent Inertia:** Documented the exact coupled inertia relationship ($J_{eq} = J_{engine} + J_{prop} * r_g^2$) in the implementation notes, enforcing architectural decoupling until full system integration.
 
 ### 5. Correction Pass — Calibration & Data Consistency
 A post-implementation review found that the initial coefficients (D=1.9 m, CQ_static=0.015, CT_static=0.12) produced ~116.7 kW absorbed power at the nominal operating point — exceeding the Rotax 914 shaft-power envelope of ~71.3 kW.
@@ -44,14 +44,14 @@ All 137 tests across the physical foundation (Phases 1A through 1F) successfully
 
 ---
 
-# Digital Twin Phase 6b: Empirical Expected State
+# Digital Twin Phase 2B & 2C: Healthy Expected State & Synchronization
 ## Background
-The previous Digital Twin implementation contained a critical architectural weakness: it generated the `ExpectedState` by directly copying the `sim_state` variables from the Module 01 physical model. Because the `ObservedState` (telemetry) is just the transmitted version of the exact same `sim_state`, the two states would always perfectly match—even if a fault occurred in the physical engine. This resulted in near-zero residuals at all times, making the Digital Twin incapable of independently detecting faults.
+The previous Digital Twin implementation contained a critical architectural weakness: it generated the `ExpectedState` by directly copying the `sim_state` variables from the physics model. Because the `ObservedState` (telemetry) is just the transmitted version of the exact same `sim_state`, the two states would always perfectly match—even if a fault occurred in the physical engine. This resulted in near-zero residuals at all times, making the Digital Twin incapable of independently detecting faults.
 
 ## Changes Made
 
-### 1. Empirical Predictive Model (`src/digital_twin/physics/expected_behavior.py`)
-We completely replaced the direct `sim_state` copying mechanism with an **Independent Empirical Baseline Model**. The `ExpectedState` is now generated *deterministically* based on the `operating_context` (e.g., pilot throttle command and ambient conditions). 
+### 1. Healthy Reference Model (`src/digital_twin/physics/healthy_reference.py`)
+We completely replaced the direct `sim_state` copying mechanism with an **Independent Healthy Reference Model**. The `HealthyExpectedState` is now generated *deterministically* based on the `operating_context` (e.g., pilot throttle command and ambient conditions).
 
 Key Engineering Approximations `[ENGINEERING_APPROXIMATION]` include:
 - **MAP**: Linearly mapped from 0.35 bar (idle) to 1.15 bar (max continuous) based on the input throttle percentage.
@@ -60,36 +60,14 @@ Key Engineering Approximations `[ENGINEERING_APPROXIMATION]` include:
 - **Fuel Flow**: Calculated to maintain an AFR of ~14.7 (scaling richer at high power).
 - **Temperatures (EGT, CHT, etc.)**: Derived directly from the combustion heat (Fuel Flow).
 
-### 2. Orchestrator Integration (`src/digital_twin/services/twin_engine.py`)
-We updated `DigitalTwinEngine.process_step()` to pass the `operating_context` directly into `ExpectedBehaviorModel.from_simulation_state()`. This cleanly decouples the Expected State generation from the internal variables of the Module 01 physics simulation.
+We updated `DigitalTwinEngine.process_step()` to pass the `operating_context` directly into `HealthyReferenceModel`. This cleanly decouples the Expected State generation from the internal variables of the physical simulation.
 
-## Validation Results
-We created a test script (`scratch/test_empirical_expected_state.py`) that inputs a 100% throttle command into the new model and intentionally injects a fault into the simulated telemetry where MAP drops to 0.50 bar.
+We verified that the new model independently detects faults (e.g., dropping MAP to 0.50 bar) via `test_stateful_twin.py`.
 
-The Digital Twin now successfully catches the anomaly because its independent Expected State predicts the correct values:
+### 3. Synchronization Layer (Phase 2C)
+We implemented a strict temporal and sequential synchronization boundary (`StateSynchronizer`) to ensure the `HealthyExpectedState` and `ObservedState` are properly aligned before any residual or causal analysis occurs.
 
-```
-Testing Empirical Expected State Generation...
-
---- EXPECTED STATE (from Empirical Model with Throttle=100%) ---
-MAP: 1.15 bar (Should be ~1.15)
-RPM: 5800 (Should be ~5800)
-
---- OBSERVED STATE (from Telemetry / Faulted) ---
-MAP: 0.50 bar (Faulted to 0.5)
-RPM: 5000
-
---- RESIDUALS ---
-MAP Residual: -0.65 (Warning: False)
-RPM Residual: -800.00 (Warning: False)
-
---- TWIN STATUS ---
-Status: DEVIATION_DETECTED
-Confidence: 0.85
-Active Warnings: 4
-```
-
-*(Note: The MAP and RPM residuals register correctly. The warnings flag reads false directly on the residual object because the 2.0-second debounce timer suppresses transient warnings, but the overall `Twin Status` correctly elevates to `DEVIATION_DETECTED` due to hard limits being breached).*
+*(Note: The MAP and RPM residuals register correctly in independent testing, and the 2.0-second debounce timer suppresses transient warnings until hard limits are breached).*
 
 ## Conclusion
 The Digital Twin now functions as a true, independent baseline reference that can cross-check the physical engine's output against the pilot's commands and environmental conditions.

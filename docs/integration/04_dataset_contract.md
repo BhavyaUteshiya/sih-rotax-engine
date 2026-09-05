@@ -1,6 +1,6 @@
 # Dataset Exporter Contract
 
-The Dataset Exporter converts Module 01 normalized telemetry into ML-ready CSV and JSONL formats:
+The Dataset Exporter converts normalized telemetry into ML-ready CSV and JSONL formats:
 
 - `timestamp`: UTC Epoch timestamp
 - `simulation_time`: Simulation time in seconds

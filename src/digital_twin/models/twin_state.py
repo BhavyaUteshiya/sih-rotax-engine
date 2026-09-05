@@ -13,6 +13,7 @@ from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.estimated_actual_state import EstimatedActualState
 from src.digital_twin.models.residual_state import ResidualState
+from src.digital_twin.models.synchronization_result import SynchronizationResult
 
 
 class DigitalTwinDataQuality(str, Enum):
@@ -27,6 +28,7 @@ class DigitalTwinStatus(str, Enum):
     """Lifecycle status enumerations for the Phase 2 Digital Twin."""
     OFFLINE = "OFFLINE"
     WAITING_FOR_DATA = "WAITING_FOR_DATA"
+    SYNC_FAILED = "SYNC_FAILED"
     SYNCHRONIZED = "SYNCHRONIZED"
     DATA_QUALITY_DEGRADED = "DATA_QUALITY_DEGRADED"
     DEVIATION_DETECTED = "DEVIATION_DETECTED"
@@ -49,10 +51,11 @@ class DigitalTwinState:
     estimated_actual_state: EstimatedActualState = field(default_factory=EstimatedActualState)
     residual_state: ResidualState = field(default_factory=ResidualState)
     health_state: HealthState = field(default_factory=HealthState)
+    synchronization_result: Optional[SynchronizationResult] = None
 
     data_quality: DigitalTwinDataQuality = DigitalTwinDataQuality.GOOD
     confidence: float = 1.0
-    status: DigitalTwinStatus = DigitalTwinStatus.SYNCHRONIZED
+    status: DigitalTwinStatus = DigitalTwinStatus.WAITING_FOR_DATA
     warnings: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -66,6 +69,7 @@ class DigitalTwinState:
             "confidence": round(self.confidence, 4),
             "operating_context": self.operating_context.to_dict(),
             "health_state": self.health_state.to_dict(),
+            "synchronization_result": self.synchronization_result.to_dict() if self.synchronization_result else None,
             "observed_state": self.observed_state.to_dict(),
             "healthy_expected_state": self.healthy_expected_state.to_dict(),
             "estimated_actual_state": self.estimated_actual_state.to_dict(),

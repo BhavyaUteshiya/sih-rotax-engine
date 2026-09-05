@@ -9,7 +9,7 @@ These contracts serve as the foundation for Phase 2B (Telemetry Ingestion & Cali
 
 1. **Strict Separation of Concerns**:
    - The **Physical Twin** (real-world engine) produces observations via sensors.
-   - The **Digital Twin Physics** (Module 01) produces expected baseline behaviors.
+   - The **Digital Twin Physics** simulation produces expected baseline behaviors.
    - The **Digital Twin State Estimator** produces an estimated actual state (the authoritative "Twin").
    - These three concepts must never be merged or overwritten in place.
 
@@ -33,6 +33,7 @@ The root object that aggregates the entire state of the twin at a specific times
   - `health_state`: Degradation and fault injection profiles.
   - `observed_state`: Raw or pre-processed telemetry (The Physical Twin).
   - `healthy_expected_state`: Baseline physical targets (The Expected Twin).
+  - `synchronization_result`: Status of temporal/contextual alignment between expected and observed.
   - `estimated_actual_state`: Best estimate of reality (The Actual Twin).
   - `residual_state`: Delta between observed and expected.
 
@@ -43,13 +44,13 @@ Environmental variables (altitude, ambient temp/pressure) and pilot control inpu
 Tracks physical degradation (e.g., turbo efficiency loss, sensor bias) and injected faults. Used primarily for simulations and health tracking.
 
 ### 4. `ObservedState`
-The *truth* as reported by the physical engine's telemetry (Module 02). 
+The *truth* as reported by the physical engine's telemetry stream. 
 - All parameters are `Optional[float]` because sensor data may drop out.
 - Contains an explicit `data_quality` string ("GOOD", "MISSING", "DEGRADED").
 - **Crucial Rule**: Telemetry ingestion logic is strictly separated from the schema definition.
 
 ### 5. `HealthyExpectedState`
-The *truth* as reported by the Module 01 Physics models, assuming a perfectly healthy engine.
+The *truth* as reported by the underlying Physics models, assuming a perfectly healthy engine.
 - Contains all 19 Category C parameters.
 - Default values are physical zeros or baseline ISA day constants, not `None`.
 
@@ -62,9 +63,14 @@ Explicitly tracks the difference between `ObservedState` and `HealthyExpectedSta
 - `ParameterResidual`: Dataclass containing `expected`, `observed`, `residual`, `relative_error`, and `quality`.
 - Handles `NaN`, `Inf`, and `None` gracefully without crashing the analysis pipeline.
 
+### 8. `SynchronizationResult`
+Authoritative contract encapsulating the outcome of temporal, contextual, and physical alignment between the physical telemetry (`ObservedState`) and the baseline reference (`HealthyExpectedState`).
+- **Data Integrity**: Propagates data quality and failure semantics deterministically without adaptive learning or heuristic guessing.
+- Explicitly catches stale data, out-of-order sequence issues, timestamp discrepancies, and engine mismatches.
+- Dictates whether downstream estimation (UKF) and residual analysis proceed.
+
 ## Migration from Phase 1
-- `twin_internal_state.py` has been completely deleted and superseded by `EstimatedActualState` and `HealthState`.
-- `expected_state.py` has been deleted and replaced by `HealthyExpectedState` to clarify its role as a healthy baseline.
+- Older monolithic state contracts have been deleted and superseded by strict isolation of `ObservedState`, `HealthyExpectedState`, `ResidualState`, and `EstimatedActualState`.
 - `twin_engine.py` orchestrator has been updated to ingest telemetry externally rather than tightly coupling to a pipeline inside the state classes.
 
 ## Next Steps (Phase 2B & 2C)
