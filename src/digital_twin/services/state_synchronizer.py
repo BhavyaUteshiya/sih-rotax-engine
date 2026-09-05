@@ -18,7 +18,10 @@ class StateSynchronizer:
     between Observed (telemetry) and Expected (physics) states.
     """
 
-    def __init__(self, timestamp_tolerance_s: float = 0.1):
+    # Timestamp tolerance for deterministic frame alignment
+    DEFAULT_TIMESTAMP_TOLERANCE_S = 0.1
+
+    def __init__(self, timestamp_tolerance_s: float = DEFAULT_TIMESTAMP_TOLERANCE_S):
         # Explicitly documented synchronization tolerances
         self.timestamp_tolerance_s = timestamp_tolerance_s
 
@@ -89,10 +92,11 @@ class StateSynchronizer:
             )
 
         # 4. Temporal Alignment Checks
-        if observed.sequence_number <= last_sequence_number and observed.sequence_number != 0:
-            # We allow 0 as an initial reset sequence, otherwise it's out of order
-            return SynchronizationResult(
-                is_synchronized=False,
+        if observed.sequence_number <= last_sequence_number:
+            # Sequence 0 is only valid if it's the very first sequence (last_sequence_number == -1)
+            if not (last_sequence_number == -1 and observed.sequence_number == 0):
+                return SynchronizationResult(
+                    is_synchronized=False,
                 status=SynchronizationStatus.OUT_OF_ORDER,
                 observed_timestamp=observed.timestamp,
                 expected_timestamp=expected.timestamp,
@@ -127,7 +131,9 @@ class StateSynchronizer:
             )
              
         # 5. Context Alignment Checks
-        # Context synchronization is reserved for future phases when operating context is fully observable.
+        # Context synchronization is reserved for future phases.
+        # Currently, the repository does not contain justified numerical tolerances for context variables.
+        # We explicitly decline to falsely claim complete numeric context validation without engineering limits.
         
         # 6. Success
         final_status = SynchronizationStatus.SYNC_SUCCESS

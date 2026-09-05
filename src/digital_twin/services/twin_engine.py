@@ -18,10 +18,10 @@ from src.digital_twin.services.state_synchronizer import StateSynchronizer
 
 class DigitalTwinEngine:
     """
-    Main orchestrator service for Digital Twin Phase 2A:
-    Aligns HealthyExpectedState (from Module 01) and ObservedState (from telemetry),
+    Main orchestrator service for Digital Twin Phase 2A - 2C:
+    Aligns HealthyExpectedState (from Physics) and ObservedState (from telemetry),
     computes ParameterResiduals, evaluates Causal Deviation Graph, and updates Twin Status.
-    NOTE: Telemetry ingestion is deliberately excluded from Phase 2A.
+    NOTE: Telemetry ingestion is deliberately externalized from the Core Engine.
     """
 
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml") -> None:
@@ -51,6 +51,12 @@ class DigitalTwinEngine:
     ) -> DigitalTwinState:
         """
         Executes a single Digital Twin evaluation step for engine_index.
+        
+        Semantics:
+        - Internal simulator time defines the reference physics state.
+        - The telemetry (ObservedState) timestamp/sequence acts as the explicit synchronization frame.
+        - The expected state is intentionally tagged with this synchronization frame to guarantee logical alignment.
+        - The expected state itself is generated PURELY from physics/context, NEVER from observed telemetry.
         """
         # 1. Derive Expected State from internal Healthy Reference Model
         expected = self.reference_models[engine_index].step(context=operating_context, dt=dt)
@@ -86,7 +92,7 @@ class DigitalTwinEngine:
             if sync_result.quality_effect == "INVALID":
                 status = DigitalTwinStatus.SYNC_FAILED
                 data_quality = DigitalTwinDataQuality.INVALID
-                confidence = 0.5
+                confidence = 0.0  # Zero confidence when sync explicitly fails due to invalid observation
             elif sync_result.quality_effect == "INSUFFICIENT_DATA":
                 status = DigitalTwinStatus.INSUFFICIENT_DATA
                 data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
@@ -198,7 +204,7 @@ class DigitalTwinEngine:
     def get_causal_analysis(self, engine_index: int = 1) -> Dict[str, Any]:
         """Retrieves physical causal chain graph status for engine_index."""
         st = self.twin_states.get(engine_index)
-        # Not fully implemented in 2A, return empty dict for now.
+        # Causal deviation graph analysis is reserved for Phase 2D State Estimation.
         return {}
 
     def get_warnings(self) -> List[Dict[str, Any]]:

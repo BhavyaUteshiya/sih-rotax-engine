@@ -3,7 +3,13 @@
 ## Overview
 Phase 2A establishes the authoritative data contracts for the Digital Twin Core. This phase resolves the ambiguity of previous dictionary-based states and imposes a strict type-safe, explicitly segregated schema for the Twin's lifecycle.
 
-These contracts serve as the foundation for Phase 2B (Telemetry Ingestion & Calibration), Phase 2C (State Estimation UKF), and Phase 3 (Machine Learning).
+These contracts serve as the foundation for the sequential Digital Twin Core phases:
+- Phase 2B: Healthy Expected-State Interface
+- Phase 2C: Observed/Expected Synchronization
+- Phase 2D: State Estimation
+- Phase 2E: Residual & Confidence Engine
+- Phase 2F: Health-State Management
+- Phase 2G: Phase 2 Integration + Acceptance
 
 ## Architectural Principles
 
@@ -73,5 +79,5 @@ Authoritative contract encapsulating the outcome of temporal, contextual, and ph
 - Older monolithic state contracts have been deleted and superseded by strict isolation of `ObservedState`, `HealthyExpectedState`, `ResidualState`, and `EstimatedActualState`.
 - `twin_engine.py` orchestrator has been updated to ingest telemetry externally rather than tightly coupling to a pipeline inside the state classes.
 
-## Next Steps (Phase 2B & 2C)
-With these contracts in place, the system is ready to implement Unscented Kalman Filters (UKF) for state estimation, robust telemetry synchronization, and eventually, failure prognostics.
+## Next Steps
+With these contracts and the Phase 2B and 2C implementations in place, the system is ready to advance through the remainder of the Phase 2 roadmap (State Estimation, Residual Engine, Health-State Management).

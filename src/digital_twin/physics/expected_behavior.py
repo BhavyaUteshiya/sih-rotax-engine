@@ -14,7 +14,6 @@ class ExpectedBehaviorModel:
     MANDATE: Does NOT duplicate or re-implement independent physics equations. Reuses authoritative Rotax 914 physics.
     Supports complete 19 internal Category C parameters. Disambiguates combustion_energy, heat_release_rate_w, and combustion_efficiency.
     """
-
     @classmethod
     def from_simulation_state(
         cls,
@@ -25,7 +24,7 @@ class ExpectedBehaviorModel:
         propeller_state: Optional[Any] = None
     ) -> HealthyExpectedState:
         """
-        Maps current Module 01 SimulationState attributes for engine_index into a clean HealthyExpectedState dataclass.
+        Maps current SimulationState attributes for engine_index into a clean HealthyExpectedState dataclass.
         """
         if sim_state is None:
             return HealthyExpectedState(
@@ -36,72 +35,62 @@ class ExpectedBehaviorModel:
                 model_confidence=0.0
             )
 
-        e = sim_state.engines.get(engine_index) if hasattr(sim_state, "engines") else None
-        t = sim_state.thermodynamics.get(engine_index) if hasattr(sim_state, "thermodynamics") else None
-        th = sim_state.thermals.get(engine_index) if hasattr(sim_state, "thermals") else None
-        lub = sim_state.lubrication.get(engine_index) if hasattr(sim_state, "lubrication") else None
-        env = getattr(sim_state, "environment", None)
-        ac = getattr(sim_state, "aircraft", None)
+        atm = getattr(sim_state, "atmosphere", None)
+        turbo = getattr(sim_state, "turbo", None)
+        airflow = getattr(sim_state, "airflow", None)
+        combustion = getattr(sim_state, "combustion", None)
+        engine_dyn = getattr(sim_state, "engine_dynamics", None)
+        thermal = getattr(sim_state, "thermal", None)
 
-        # Handle Propeller load/thrust if supplied separately or attached
-        thrust_val = 0.0
-        prop_load_val = 0.0
-        if propeller_state is not None:
-            thrust_val = getattr(propeller_state, "thrust_n", 0.0)
-            prop_load_val = getattr(propeller_state, "load_torque_nm", 0.0)
-        elif hasattr(sim_state, "propulsion") and sim_state.propulsion is not None:
-            p_map = getattr(sim_state.propulsion, "propellers", {})
-            if engine_index in p_map:
-                thrust_val = getattr(p_map[engine_index], "thrust_n", 0.0)
-                prop_load_val = getattr(p_map[engine_index], "load_torque_nm", 0.0)
+        # Propeller handling
+        prop = propeller_state if propeller_state is not None else getattr(sim_state, "propeller", None)
+        thrust_val = getattr(prop, "thrust_n", 0.0)
+        prop_load_val = getattr(prop, "aerodynamic_torque_nm", 0.0)
 
-        rpm_val = e.engine_rpm if e else 0.0
-        map_val = (e.manifold_pressure_pa / 100000.0) if e else 1.01325
-        egt_val = (t.egt_k - 273.15) if t else 15.0
-        cht_val = (t.cht_k - 273.15) if t else 15.0
-        oil_temp_val = (t.oil_temp_k - 273.15) if t else 15.0
+        # Engine Dynamics & Basic params
+        rpm_val = getattr(engine_dyn, "engine_rpm", 0.0)
+        torque_val = getattr(engine_dyn, "indicated_torque_nm", 0.0)
+        gearbox_val = getattr(engine_dyn, "propeller_rpm", rpm_val / 2.4286)
+
+        # Turbo & Airflow
+        map_pa = getattr(turbo, "manifold_pressure_pa", 101325.0)
+        map_val = map_pa / 100000.0  # Convert Pa to bar
         
-        # Oil pressure from lubrication runner or dynamic estimate if runner inactive
-        oil_press_val = 0.0
-        if lub and getattr(lub, "oil_pressure_pa", 0.0) > 0.0:
-            oil_press_val = lub.oil_pressure_pa / 100000.0
-        elif rpm_val > 2000:
-            oil_press_val = 5.0
-        elif rpm_val > 500:
-            oil_press_val = 3.0
+        # Turbo speed is in rad/s, map to RPM (rad/s * 60 / 2pi)
+        turbo_rad_s = getattr(turbo, "turbo_speed_rad_s", 0.0)
+        turbo_val = turbo_rad_s * 60.0 / (2.0 * 3.1415926535)
 
-        coolant_temp_val = (t.coolant_temp_k - 273.15) if t else 15.0
-        afr_val = e.air_fuel_ratio if e else 14.7
-        fuel_val = (e.fuel_mass_flow_kg_s * 3600.0) if e else 0.0
-        air_val = (e.air_mass_flow_kg_s * 3600.0) if e else 0.0
-        torque_val = e.indicated_torque_total_n_m if e else 0.0
-        turbo_val = e.turbocharger.turbo_speed_rpm if (e and hasattr(e, "turbocharger")) else 0.0
+        air_val = getattr(airflow, "air_mass_flow_kg_s", 0.0) * 3600.0
 
+        # Combustion
+        fuel_val = getattr(combustion, "fuel_mass_flow_kg_s", 0.0) * 3600.0
+        afr_val = getattr(combustion, "air_fuel_ratio", 14.7)
+        comb_eff = getattr(combustion, "combustion_efficiency", 0.0)
+        
         # Disambiguation:
-        # 1. combustion_efficiency (dimensionless ratio, 0.0 - 1.0)
-        comb_eff = getattr(t, "combustion_efficiency", 0.95) if (t and rpm_val > 100) else 0.0
-        # 2. combustion_energy (Joule). Module 01 calculates heat_release_rate_w (Watts / Rate of Energy).
-        # heat_release_rate_w is energy release per unit time (Watts), NOT total combustion energy in Joules.
-        # Therefore, combustion_energy in Joules is marked None (unavailable) to prevent unit/semantic mislabeling.
+        # combustion_energy in Joules is unavailable. heat_release_power_w is Watts.
         comb_energy_val = None
 
-        ind_power = (getattr(e, "indicated_power_total_w", 0.0) / 1000.0) if e else 0.0
-        gear_ratio = getattr(e, "gearbox_ratio", 2.43) if e else 2.43
-        gearbox_val = (rpm_val / gear_ratio) if gear_ratio else (rpm_val / 2.43)
+        ind_power = getattr(combustion, "indicated_power_w", 0.0) / 1000.0 # Convert W to kW
+        
+        egt_val = getattr(combustion, "exhaust_temperature_k", 288.15) - 273.15
 
-        amb_temp_val = (env.ambient_temp_k - 273.15) if env else 15.0
-        amb_press_val = (env.ambient_pressure_pa / 1000.0) if env else 101.325
-        amb_rho_val = env.air_density_kg_m3 if env else 1.225
-        wind_val = getattr(env, "wind_speed_m_s", 0.0) if env else 0.0
-        alt_val = ac.altitude_m if ac else 0.0
-        speed_val = ac.velocity_m_s if ac else 0.0
+        # Thermal
+        cht_val = getattr(thermal, "cht_temperature_c", 15.0)
+        oil_temp_val = getattr(thermal, "oil_temperature_c", 15.0)
 
-        turbo_boost_val = max(0.0, map_val - (amb_press_val / 100.0))
+        # Not provided by Phase 1 simulator; explicit contract as unmodeled/0.0
+        oil_press_val = 0.0
+        coolant_temp_val = 0.0
+
+        # Environment / Derived
+        amb_press_pa = getattr(atm, "pressure_pa", 101325.0)
+        turbo_boost_val = max(0.0, map_val - (amb_press_pa / 100000.0))
+
         if prop_load_val == 0.0 and torque_val > 0.0:
-            prop_load_val = torque_val / gear_ratio if gear_ratio else torque_val
+            # Fallback if propeller didn't supply load
+            prop_load_val = torque_val * 2.4286
 
-        # Evaluate a basic model confidence based on engine state.
-        # Future implementations will check bounds for extreme inputs.
         confidence_val = 1.0 if sim_state is not None else 0.0
 
         return HealthyExpectedState(

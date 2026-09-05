@@ -10,9 +10,13 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class ObservedState:
     """
-    Encapsulates validated, normalized telemetry observations coming strictly from Module 02.
-    MANDATE: Does NOT read directly from Module 01 simulation truth state and contains ZERO fallbacks to Module 01.
-    Supports complete 19 internal Category C parameters. Missing telemetry channels remain None.
+    Represents the observed state of the engine as derived from external telemetry (e.g. CAN bus).
+    This serves as the raw, unfiltered physical reality input to the Digital Twin.
+
+    ARCHITECTURAL MANDATE:
+    ObservedState is external/observed input and MUST NOT silently fall back to the healthy 
+    simulation/reference model. If a sensor drops out, it must be marked unavailable, not 
+    replaced with a perfect simulation value. Supports complete 19 internal Category C parameters. Missing telemetry channels remain None.
     Disambiguates combustion_energy from combustion_efficiency.
     """
     timestamp: float = 0.0
