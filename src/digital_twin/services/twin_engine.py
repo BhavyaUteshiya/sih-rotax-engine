@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from src.digital_twin.analysis.causal_analyzer import CausalAnalyzer
 from src.digital_twin.analysis.residual_analyzer import ResidualAnalyzer
+from src.digital_twin.models.health_state import HealthState, HealthLevel
 from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ResidualState
@@ -164,7 +165,65 @@ class DigitalTwinEngine:
                 # Policy: Nominal state. Inherit estimator confidence (default 1.0)
                 confidence = estimated_state.estimation_confidence if hasattr(estimated_state, 'estimation_confidence') else 1.0
 
-        # 8. Package Master Digital Twin State
+        # 8. Phase 2F Health State Determination
+        # Determine dominant parameter if any
+        dominant_parameter = "NONE"
+        for param in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                      "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                      "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                      "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(residuals, param)
+            if res and res.status == "CRITICAL":
+                dominant_parameter = param.upper()
+                break
+        
+        if dominant_parameter == "NONE":
+            for param in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+                res = getattr(residuals, param)
+                if res and res.status == "WARNING":
+                    dominant_parameter = param.upper()
+                    break
+
+        is_assessable = True
+        if not sync_result.is_synchronized:
+            health_level = HealthLevel.UNKNOWN
+            is_assessable = False
+            assessment_reason = "Synchronization failed."
+        elif residuals.missing_count + residuals.invalid_count > 0:
+            health_level = HealthLevel.UNKNOWN
+            is_assessable = False
+            assessment_reason = "Insufficient or invalid data for assessment."
+        elif residuals.criticals_count > 0:
+            health_level = HealthLevel.CRITICAL
+            assessment_reason = "Critical physical deviation detected."
+        elif residuals.warnings_count > 0:
+            health_level = HealthLevel.WARNING
+            assessment_reason = "Warning physical deviation detected."
+        elif data_quality == DigitalTwinDataQuality.DEGRADED:
+            health_level = HealthLevel.DEGRADED
+            assessment_reason = "Data quality or estimator limitations degrade assessment."
+        else:
+            health_level = HealthLevel.HEALTHY
+            assessment_reason = "Nominal operation."
+
+        health_state = HealthState(
+            timestamp=timestamp,
+            engine_id=f"engine_{engine_index}",
+            health_level=health_level,
+            is_assessable=is_assessable,
+            health_confidence=confidence,
+            assessment_reason=assessment_reason,
+            dominant_parameter=dominant_parameter,
+            critical_count=residuals.criticals_count,
+            warning_count=residuals.warnings_count,
+            missing_count=residuals.missing_count,
+            invalid_count=residuals.invalid_count
+        )
+
+        # 9. Package Master Digital Twin State
         state = DigitalTwinState(
             timestamp=timestamp,
             engine_id=f"engine_{engine_index}",
@@ -174,6 +233,7 @@ class DigitalTwinEngine:
             healthy_expected_state=expected,
             estimated_actual_state=estimated_state,
             residual_state=residuals,
+            health_state=health_state,
             synchronization_result=sync_result,
             data_quality=data_quality,
             confidence=confidence,

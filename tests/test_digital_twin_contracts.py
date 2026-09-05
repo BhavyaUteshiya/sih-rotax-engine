@@ -30,7 +30,7 @@ def test_default_state_validity():
     dt = DigitalTwinState()
 
     assert op_ctx.altitude_m == 0.0
-    assert health.turbo_efficiency_degradation == 1.0
+    assert health.health_level == "UNKNOWN"
     assert obs.rpm is None  # Observations default to missing
     assert exp.rpm is None  # Healthy expectations default to missing until explicitly set
     assert est.rpm == 0.0   # Estimations default to 0.0
@@ -41,7 +41,7 @@ def test_default_state_validity():
 def test_complete_state_construction_and_isolation():
     """Test full construction and ensure states are isolated (independent objects)."""
     op_ctx = OperatingContext(altitude_m=1000.0, throttle_position=0.8)
-    health = HealthState(active_faults=["SENSOR_DEGRADED"])
+    health = HealthState(health_level="WARNING", warning_count=1)
     
     obs = ObservedState(rpm=5500.0, map_bar=1.1, data_quality="GOOD")
     exp = HealthyExpectedState(rpm=5520.0, map_bar=1.12)
@@ -91,7 +91,7 @@ def test_serialization_round_trip():
     """Test serialization to dict does not lose keys."""
     dt = DigitalTwinState(
         operating_context=OperatingContext(airspeed_m_s=30.0),
-        health_state=HealthState(turbo_efficiency_degradation=0.98),
+        health_state=HealthState(health_level="CRITICAL"),
         observed_state=ObservedState(rpm=5000.0),
         healthy_expected_state=HealthyExpectedState(rpm=5000.0),
         estimated_actual_state=EstimatedActualState(rpm=5000.0),
@@ -112,7 +112,7 @@ def test_serialization_round_trip():
     assert "residual_state" in dt_dict
     
     assert dt_dict["operating_context"]["airspeed_m_s"] == 30.0
-    assert dt_dict["health_state"]["turbo_efficiency_degradation"] == 0.98
+    assert dt_dict["health_state"]["health_level"] == "CRITICAL"
     assert dt_dict["observed_state"]["rpm"] == 5000.0
     assert dt_dict["healthy_expected_state"]["rpm"] == 5000.0
     assert dt_dict["estimated_actual_state"]["rpm"] == 5000.0
