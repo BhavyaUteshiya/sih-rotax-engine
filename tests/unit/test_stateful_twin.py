@@ -22,7 +22,7 @@ class MockPipeline:
 
 class MockObservedState(ObservedState):
     @classmethod
-    def from_module02_pipeline(cls, pipeline, engine_index, target_timestamp, target_sequence):
+    def from_pipeline(cls, pipeline, engine_index, target_timestamp, target_sequence):
         # We inject mock telemetry directly
         return cls(
             timestamp=target_timestamp,
@@ -41,7 +41,7 @@ def main():
     original_derive = engine._derive_observed_state
     
     def mock_derive(pipeline, telemetry_frame, normalized_records, engine_index, timestamp, sequence_number, propeller_state):
-        return MockObservedState.from_module02_pipeline(pipeline, engine_index, timestamp, sequence_number)
+        return MockObservedState.from_pipeline(pipeline, engine_index, timestamp, sequence_number)
         
     engine._derive_observed_state = mock_derive
 

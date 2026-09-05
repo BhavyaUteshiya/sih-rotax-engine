@@ -94,12 +94,10 @@ class CausalAnalyzer:
         Distinguishes PRIMARY_DEVIATION from PROPAGATED_DEVIATION via recursive parent search.
         """
         graph = self._get_engine_graph(engine_index)
-        residuals = residual_state.residuals if residual_state else {}
-
         # 1. Update node residual values and initial warning flags
         warning_keys = set()
         for key, node in graph.items():
-            param_res = residuals.get(node.param_key)
+            param_res = getattr(residual_state, node.param_key, None) if residual_state else None
             if param_res:
                 node.residual_val = param_res.residual
                 if param_res.warning_triggered and param_res.quality == "VALID":

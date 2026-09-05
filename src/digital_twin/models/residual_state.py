@@ -141,7 +141,7 @@ class ResidualState:
     sequence_number: int = 0
     engine_id: str = "engine_1"
     
-    # Explicit 18 Category C Parameters
+    # Explicit 19 Category C Parameters
     rpm: Optional[ParameterResidual] = None
     map_bar: Optional[ParameterResidual] = None
     turbo_rpm: Optional[ParameterResidual] = None

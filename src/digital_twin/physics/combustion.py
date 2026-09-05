@@ -22,6 +22,9 @@ class FuelCombustionInput:
     ambient_pressure_pa: float
     # Support either absolute fuel pressure or differential. If differential is non-zero, it takes precedence.
     fuel_pressure_pa: float = 0.0
+    # fuel_pressure_delta_pa represents the critical difference between fuel line pressure and 
+    # manifold absolute pressure (MAP). In the Rotax 914, fuel pressure must exceed MAP by ~0.25 bar 
+    # to inject fuel against boost pressure. It is the primary metric for fuel pump health.
     fuel_pressure_delta_pa: float = 0.0
 
 @dataclass
@@ -32,6 +35,8 @@ class FuelCombustionState:
     air_fuel_ratio: float
     equivalence_ratio: float
     
+    # Calculated fuel pressure delta (Fuel Pressure - Manifold Pressure). 
+    # Must be strictly positive and maintained ~0.25 bar to ensure injection against boost.
     fuel_pressure_delta_pa: float
     fuel_pressure_status: str  # 'LOW', 'NORMAL', 'HIGH'
     

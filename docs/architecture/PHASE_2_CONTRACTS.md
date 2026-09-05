@@ -50,7 +50,7 @@ The *truth* as reported by the physical engine's telemetry (Module 02).
 
 ### 5. `HealthyExpectedState`
 The *truth* as reported by the Module 01 Physics models, assuming a perfectly healthy engine.
-- Contains all 18 Category C parameters.
+- Contains all 19 Category C parameters.
 - Default values are physical zeros or baseline ISA day constants, not `None`.
 
 ### 6. `EstimatedActualState`

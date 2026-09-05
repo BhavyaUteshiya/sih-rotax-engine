@@ -12,7 +12,7 @@ class ObservedState:
     """
     Encapsulates validated, normalized telemetry observations coming strictly from Module 02.
     MANDATE: Does NOT read directly from Module 01 simulation truth state and contains ZERO fallbacks to Module 01.
-    Supports complete 18 internal Category C parameters. Missing telemetry channels remain None.
+    Supports complete 19 internal Category C parameters. Missing telemetry channels remain None.
     Disambiguates combustion_energy from combustion_efficiency.
     """
     timestamp: float = 0.0
@@ -20,7 +20,7 @@ class ObservedState:
     engine_id: str = "engine_1"
     aircraft_id: str = "rotax_914_uav"
 
-    # Engine Operating Parameters (18 Category C Parameters)
+    # Engine Operating Parameters (19 Category C Parameters)
     rpm: Optional[float] = None
     map_bar: Optional[float] = None
     turbo_rpm: Optional[float] = None

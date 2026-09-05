@@ -11,7 +11,8 @@ from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ResidualState
 from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStatus, DigitalTwinDataQuality
-from src.digital_twin.physics.expected_behavior import ExpectedBehaviorModel
+from src.digital_twin.models.operating_context import OperatingContext
+from src.digital_twin.physics.healthy_reference_model import HealthyReferenceModel
 
 
 class DigitalTwinEngine:
@@ -29,32 +30,29 @@ class DigitalTwinEngine:
             1: DigitalTwinState(engine_id="engine_1"),
             2: DigitalTwinState(engine_id="engine_2"),
         }
+        self.reference_models: Dict[int, HealthyReferenceModel] = {
+            1: HealthyReferenceModel(engine_index=1),
+            2: HealthyReferenceModel(engine_index=2),
+        }
         self.history_records: List[Dict[str, Any]] = []
         self.active_warnings: List[Dict[str, Any]] = []
 
     def process_step(
         self,
-        sim_state: Any,
+        operating_context: OperatingContext,
+        dt: float,
         observed_state: Optional[ObservedState] = None,
         engine_index: int = 1,
         timestamp: float = 0.0,
-        sequence_number: int = 0,
-        operating_context: Optional[Dict[str, Any]] = None,
-        propeller_state: Optional[Any] = None
+        sequence_number: int = 0
     ) -> DigitalTwinState:
         """
         Executes a single Digital Twin evaluation step for engine_index.
         """
-        ctx = operating_context if operating_context is not None else {}
-
-        # 1. Derive Expected State from Module 01 physics
-        expected = ExpectedBehaviorModel.from_simulation_state(
-            sim_state=sim_state,
-            engine_index=engine_index,
-            timestamp=timestamp,
-            sequence_number=sequence_number,
-            propeller_state=propeller_state
-        )
+        # 1. Derive Expected State from internal Healthy Reference Model
+        expected = self.reference_models[engine_index].step(context=operating_context, dt=dt)
+        expected.timestamp = timestamp
+        expected.sequence_number = sequence_number
 
         # 2. Use provided Observed State (Telemetry ingestion is external in Phase 2A)
         if observed_state is None:
@@ -76,22 +74,27 @@ class DigitalTwinEngine:
         # 5. Determine Twin Lifecycle Status
         if observed.data_quality == "INSUFFICIENT_DATA":
             status = DigitalTwinStatus.INSUFFICIENT_DATA
+            data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
             confidence = 0.0
             warnings = []
         elif observed.data_quality == "INVALID":
             status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
+            data_quality = DigitalTwinDataQuality.INVALID
             confidence = 0.5
             warnings = self._generate_warning_events(residuals, causal_res, engine_index)
         elif residuals.warnings_count > 0:
             status = DigitalTwinStatus.DEVIATION_DETECTED
+            data_quality = DigitalTwinDataQuality.GOOD if observed.data_quality == "GOOD" else DigitalTwinDataQuality.DEGRADED
             confidence = 0.85
             warnings = self._generate_warning_events(residuals, causal_res, engine_index)
         elif observed.data_quality == "DEGRADED":
             status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
+            data_quality = DigitalTwinDataQuality.DEGRADED
             confidence = 0.7
             warnings = self._generate_warning_events(residuals, causal_res, engine_index)
         else:
             status = DigitalTwinStatus.SYNCHRONIZED
+            data_quality = DigitalTwinDataQuality.GOOD
             confidence = 1.0
             warnings = []
 
@@ -103,7 +106,7 @@ class DigitalTwinEngine:
             observed_state=observed,
             healthy_expected_state=expected,
             residual_state=residuals,
-            data_quality=DigitalTwinDataQuality.GOOD,
+            data_quality=data_quality,
             confidence=confidence,
             status=status,
             warnings=warnings,

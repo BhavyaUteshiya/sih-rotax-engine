@@ -12,7 +12,7 @@ class ExpectedBehaviorModel:
     """
     Adapter and interface layer extracting HealthyExpectedState parameters directly from Module 01 physics state.
     MANDATE: Does NOT duplicate or re-implement independent physics equations. Reuses authoritative Rotax 914 physics.
-    Supports complete 18 internal Category C parameters. Disambiguates combustion_energy, heat_release_rate_w, and combustion_efficiency.
+    Supports complete 19 internal Category C parameters. Disambiguates combustion_energy, heat_release_rate_w, and combustion_efficiency.
     """
 
     @classmethod
@@ -100,6 +100,10 @@ class ExpectedBehaviorModel:
         if prop_load_val == 0.0 and torque_val > 0.0:
             prop_load_val = torque_val / gear_ratio if gear_ratio else torque_val
 
+        # Evaluate a basic model confidence based on engine state.
+        # Future implementations will check bounds for extreme inputs.
+        confidence_val = 1.0 if sim_state is not None else 0.0
+
         return HealthyExpectedState(
             timestamp=timestamp,
             sequence_number=sequence_number,
@@ -124,11 +128,5 @@ class ExpectedBehaviorModel:
             gearbox_rpm=gearbox_val,
             propeller_load_nm=prop_load_val,
             thrust_n=thrust_val,
-            airspeed_m_s=speed_val,
-            altitude_m=alt_val,
-            ambient_temp_c=amb_temp_val,
-            ambient_pressure_kpa=amb_press_val,
-            ambient_density_kg_m3=amb_rho_val,
-            wind_m_s=wind_val,
-            model_confidence=1.0
+            model_confidence=confidence_val
         )

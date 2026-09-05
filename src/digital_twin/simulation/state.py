@@ -35,6 +35,8 @@ class SimulationInput:
     relative_humidity_pct: float = 0.0
     throttle_position: float = 0.0
     airspeed_m_s: float = 0.0
-    fuel_pressure_pa: float = 250000.0  # Nominally 2.5 bar
+    fuel_pressure_pa: float = 250000.0  # Nominally 2.5 bar absolute
+    # Explicit override for Fuel Pressure Delta (Fuel Line Pressure - Manifold Pressure).
+    # Ensures accurate fuel injection rate independent of varying boost pressure.
     fuel_pressure_delta_pa: float = 25000.0 # 0.25 bar delta
     starter_engaged: bool = False

@@ -17,13 +17,13 @@ class ResidualAnalyzer:
     """
     Evaluates parameter-by-parameter residuals between ObservedState and HealthyExpectedState.
     Thresholds are strictly configuration-driven loaded from configs/digital_twin_config.yaml.
-    Evaluates EXACTLY the 18 authoritative Category C internal parameters:
+    Evaluates EXACTLY the 19 authoritative Category C internal parameters:
     rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, combustion_energy,
-    indicated_power_kw, torque_n_m, egt_c, cht_c, coolant_temp_c, oil_temp_c,
-    oil_pressure_bar, turbo_boost_bar, gearbox_rpm, propeller_load_nm, thrust_n.
+    combustion_efficiency, indicated_power_kw, torque_n_m, egt_c, cht_c, coolant_temp_c,
+    oil_temp_c, oil_pressure_bar, turbo_boost_bar, gearbox_rpm, propeller_load_nm, thrust_n.
     """
 
-    def __init__(self, config_path: str = "configs/digital_twin_config.yaml", engine_config_path: str = "configs/module02/engines/rotax_914.yaml") -> None:
+    def __init__(self, config_path: str = "configs/digital_twin_config.yaml", engine_config_path: Optional[str] = None) -> None:
         self.config_path = config_path
         self.thresholds = self._load_thresholds(config_path)
         
@@ -45,6 +45,7 @@ class ResidualAnalyzer:
             "fuel_flow_kg_h": {"value": 1.2, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "afr": {"value": 0.8, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "combustion_energy": {"value": 1000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
+            "combustion_efficiency": {"value": 0.1, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "indicated_power_kw": {"value": 5.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "torque_n_m": {"value": 15.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "egt_c": {"value": 25.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
@@ -85,7 +86,7 @@ class ResidualAnalyzer:
         max_limits = {}
         min_limits = {}
         limits = {"max": max_limits, "min": min_limits}
-        if not os.path.exists(filepath):
+        if not filepath or not os.path.exists(filepath):
             return limits
             
         try:
@@ -129,18 +130,14 @@ class ResidualAnalyzer:
 
     def analyze(self, expected: HealthyExpectedState, observed: ObservedState) -> ResidualState:
         """
-        Computes ParameterResidual objects for all 18 authoritative internal parameters and aggregates into ResidualState.
+        Computes ParameterResidual objects for all 19 authoritative internal parameters and aggregates into ResidualState.
         Applies a parameter-specific debounce filter to suppress instantaneous transient warnings.
         """
-        res_state = ResidualState(
-            timestamp=observed.timestamp,
-            sequence_number=observed.sequence_number,
-            engine_id=observed.engine_id
-        )
-        
         engine_id = observed.engine_id
         if engine_id not in self.violation_start_times:
             self.violation_start_times[engine_id] = {}
+
+        computed_residuals = {}
 
         mappings = [
             ("rpm", expected.rpm, observed.rpm, "RPM"),
@@ -150,6 +147,7 @@ class ResidualAnalyzer:
             ("fuel_flow_kg_h", expected.fuel_flow_kg_h, observed.fuel_flow_kg_h, "kg/h"),
             ("afr", expected.afr, observed.afr, "ratio"),
             ("combustion_energy", expected.combustion_energy, observed.combustion_energy, "J"),
+            ("combustion_efficiency", expected.combustion_efficiency, observed.combustion_efficiency, "ratio"),
             ("indicated_power_kw", expected.indicated_power_kw, observed.indicated_power_kw, "kW"),
             ("torque_n_m", expected.torque_n_m, observed.torque_n_m, "N*m"),
             ("egt_c", expected.egt_c, observed.egt_c, "°C"),
@@ -211,6 +209,12 @@ class ResidualAnalyzer:
                 if name in self.violation_start_times[engine_id]:
                     del self.violation_start_times[engine_id][name]
                     
-            res_state.add_residual(res)
+            computed_residuals[name] = res
 
+        res_state = ResidualState(
+            timestamp=observed.timestamp,
+            sequence_number=observed.sequence_number,
+            engine_id=observed.engine_id,
+            **computed_residuals
+        )
         return res_state

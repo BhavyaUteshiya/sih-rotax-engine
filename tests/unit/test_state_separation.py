@@ -16,7 +16,7 @@ class MockPipeline:
 
 class MockObservedState(ObservedState):
     @classmethod
-    def from_module02_pipeline(cls, pipeline, engine_index, target_timestamp, target_sequence):
+    def from_pipeline(cls, pipeline, engine_index, target_timestamp, target_sequence):
         return cls(
             timestamp=target_timestamp,
             sequence_number=target_sequence,
@@ -30,7 +30,7 @@ def main():
     pipeline = MockPipeline()
     
     # Override for mock telemetry
-    engine._derive_observed_state = lambda *args, **kwargs: MockObservedState.from_module02_pipeline(kwargs.get('pipeline') or args[0], kwargs.get('engine_index', 1), kwargs.get('timestamp', 0.0), kwargs.get('sequence_number', 0))
+    engine._derive_observed_state = lambda *args, **kwargs: MockObservedState.from_pipeline(kwargs.get('pipeline') or args[0], kwargs.get('engine_index', 1), kwargs.get('timestamp', 0.0), kwargs.get('sequence_number', 0))
 
     print("--- Testing Healthy vs Estimated Separation ---")
     ctx = {"throttle_1": 100.0}

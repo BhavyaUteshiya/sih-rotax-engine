@@ -19,7 +19,7 @@ class EstimatedActualState:
     engine_id: str = "engine_1"
     aircraft_id: str = "rotax_914_uav"
 
-    # Estimated Engine Parameters (18 Category C Internal Parameters)
+    # Estimated Engine Parameters (19 Category C Internal Parameters)
     rpm: float = 0.0
     map_bar: float = 1.01325
     turbo_rpm: float = 0.0
