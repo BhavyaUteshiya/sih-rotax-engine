@@ -133,7 +133,24 @@ This is the master reference list for the entire Rotax 914 Digital Twin project.
 - **Authority Level:** CALIBRATION
 - **Date Accessed:** September 2026
 
-## I. Digital Twin
+## I. Engine Thermal Physics
+- **ID:** REF-THM-01
+- **Title:** Fundamentals of Heat and Mass Transfer
+- **Author/Organization:** Incropera, DeWitt
+- **Category:** I
+- **Information Used:** Lumped-capacitance method basis (THERM-02, THERM-05) and standard convective heat transfer scaling laws (THERM-07).
+- **Authority Level:** HIGH
+- **Date Accessed:** September 2026
+
+- **ID:** REF-THM-02
+- **Title:** Digital Twin Internal Calibration - Phase 1G
+- **Author/Organization:** Digital Twin Calibration
+- **Category:** I
+- **Information Used:** Specific values for conductances, thermal mass, and heat fraction, calibrated internally to reproduce nominal Rotax limits at steady-state high-power settings.
+- **Authority Level:** CALIBRATION
+- **Date Accessed:** September 2026
+
+## J. Digital Twin
 *(Reserved for future use)*
 
 ## J. AI / ML

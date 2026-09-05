@@ -84,4 +84,19 @@ PROP-06| Propeller  | P_prop = 2 * pi * n_prop * Q_prop               | Absorbed
 PROP-07| Propeller  | eta_prop = (T_prop * v_air) / P_prop            | Propulsive Efficiency              | VERIFIED
 ========================================================================================================================
 
-*(Downstream modules like 1G-Thermal physics will be registered here once implemented.)*
+========================================================================================================================
+Engine Thermal Physics (Phase 1G)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+THERM-01| Thermal   | C_th = m * cp                                   | Node Thermal Capacity              | STD PHYSICS
+THERM-02| Thermal   | dT_CHT/dt = (Q_in - Q_CHT_Oil - Q_cool) / C_CHT | CHT Node Energy Balance            | STD PHYSICS
+THERM-03| Thermal   | Q_CHT_Oil = (T_CHT - T_Oil) / R_CHT_Oil         | CHT to Oil Heat Transfer           | STD PHYSICS
+THERM-04| Thermal   | Q_CHT_cooling = G_CHT_cool * (T_CHT - T_amb)    | CHT Environmental Cooling          | STD PHYSICS
+THERM-05| Thermal   | dT_Oil/dt = (Q_CHT_Oil - Q_Oil_cool) / C_Oil    | Oil Node Energy Balance            | STD PHYSICS
+THERM-06| Thermal   | Q_Oil_cooling = G_Oil_cool * (T_Oil - T_amb)    | Oil Environmental Cooling          | STD PHYSICS
+THERM-07| Thermal   | G_cool = max(G_min, G_base*(rho*V/rho0*V0)^a)   | Cooling Conductance Surrogate      | CALIBRAT
+THERM-08| Thermal   | T_next = T_current + (dT/dt) * dt               | Explicit Euler Time Integration    | NUM SOLVER
+========================================================================================================================
+
+*(Downstream Phase 1 System Integration to follow.)*

@@ -1,0 +1,17 @@
+# Phase 1G: Engine Thermal Physics - Parameters
+
+| Parameter | Value | Units | Classification | Source | Rationale |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `M_CHT` | 15.0 | kg | ENGINEERING ESTIMATE | Digital Twin Calibration | Lumped mass of cylinder heads and cooling-critical block sections. |
+| `CP_CHT` | 900.0 | J/(kg·K) | ENGINEERING ESTIMATE | Standard Material Prop | Specific heat of typical aluminum alloys. |
+| `M_OIL` | 2.5 | kg | ENGINEERING ESTIMATE | Rotax Manuals | Estimated from ~3.0 L oil capacity. |
+| `CP_OIL` | 2000.0 | J/(kg·K) | ENGINEERING ESTIMATE | Standard Material Prop | Specific heat of engine oil. |
+| `R_CHT_OIL` | 0.01 | K/W | CALIBRATION | Digital Twin Calibration | Calibrated to ensure sufficient heat flow to oil to maintain >60 °C at steady state. |
+| `G_CHT_BASE` | 250.0 | W/K | CALIBRATION | Digital Twin Calibration | Calibrated to maintain CHT within 80-140 °C at rated power. |
+| `G_OIL_BASE` | 35.0 | W/K | CALIBRATION | Digital Twin Calibration | Calibrated to maintain Oil within 60-130 °C at rated power. |
+| `G_MIN` | 5.0 | W/K | CALIBRATION | Digital Twin Calibration | Assumes residual natural convection cooling at zero airspeed. |
+| `RHO_REF` | 1.225 | kg/m³ | STANDARD | ISA | Standard sea level density. |
+| `V_REF` | 40.0 | m/s | CALIBRATION | Digital Twin Calibration | Nominal cruise airspeed reference point. |
+| `COOLING_EXPONENT` | 0.6 | dimensionless | CALIBRATION | Digital Twin Calibration | Standard heat transfer correlation exponent for turbulent flow over surfaces. |
+| `F_CHT` | 0.35 | dimensionless | CALIBRATION | Digital Twin Calibration | Calibrated fraction of 1D residual heat loss actively driving the CHT thermal node. |
+| `RPM_COOL_COEFF` | 0.002 | W/(K·RPM) | CALIBRATION | Digital Twin Calibration | Secondary oil cooling factor driven by internal oil pump circulation. |
