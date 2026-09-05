@@ -1,3 +1,0 @@
-"""
-Digital Twin Test Package.
-"""
