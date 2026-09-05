@@ -3,11 +3,11 @@ import sys
 import os
 import math
 
-# Add src directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+# Ensure the project root is in the path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from digital_twin.physics.atmosphere import EnvironmentInput, AtmosphereModel
-from digital_twin.physics.turbo_intake import TurboIntakeModel, TurboState, ExhaustState
+from src.digital_twin.physics.atmosphere import EnvironmentInput, AtmosphereModel
+from src.digital_twin.physics.turbo_intake import TurboIntakeModel, TurboState, ExhaustState
 
 
 class TestTurboIntakeModel(unittest.TestCase):
@@ -239,20 +239,17 @@ class TestTurboIntakeModel(unittest.TestCase):
         self.assertAlmostEqual(1.0 + TurboIntakeModel.K_PR * (omega_30k**2), pr_30k)
 
     def test_21_hot_ambient_changes_conditions(self):
-        """21. Hot ambient changes atmospheric conditions consistently"""
+        """21. Hot ambient conditions strictly increase compressor outlet temperature"""
         env_hot = EnvironmentInput(altitude_m=0.0, temperature_offset_k=30.0)
         atm_hot = AtmosphereModel.calculate(env_hot)
-        # Hot air is less dense -> less mass flow for same pressure and speed
         w = 10000.0
         p_map = 150000.0
         
-        # In our surrogate model, k_flow dictates mass flow entirely based on RPM and PR. 
-        # But wait, T_out will be hotter!
         state = TurboState(w, p_map, 288.15, 0.0, 0.0)
         state_std = TurboIntakeModel.step(0.01, self.atm, self.exh, 0.0, 150000.0, state)
         state_hot_step = TurboIntakeModel.step(0.01, atm_hot, self.exh, 0.0, 150000.0, state)
         
-        # Hotter ambient -> hotter compressor outlet
+        # Verify that a hotter ambient temperature mathematically results in a hotter compressor outlet temperature
         self.assertGreater(state_hot_step.manifold_temperature_k, state_std.manifold_temperature_k)
 
     def test_22_invalid_efficiency_handling(self):

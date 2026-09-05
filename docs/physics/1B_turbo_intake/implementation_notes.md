@@ -14,4 +14,4 @@ The following are explicitly documented limitations of the current Phase 1B impl
 9. **High-Altitude Outputs**: High-altitude numerical values (like required turbo RPM) derived from this surrogate are internal model outputs, not direct measured Rotax empirical values.
 
 ## Formula Documentation
-All runtime equations (TRB-01 through TRB-06) are documented in `formulas.md` with their variables, units, sources, and classifications. They are physically located in `src/digital_twin/physics/turbo_intake.py` under `TurboIntakeModel.step()`, and validated extensively in `scratch/test_turbo_intake.py` ensuring energy conservation, numerical stability, and logical boundaries.
+All runtime equations (TRB-01 through TRB-06) are documented in `formulas.md` with their variables, units, sources, and classifications. They are physically located in `src/digital_twin/physics/turbo_intake.py` under `TurboIntakeModel.step()`, and validated extensively in `scratch/test_turbo_intake.py` ensuring thermodynamic temperature/work relationships, numerical stability, and logical physical boundaries.

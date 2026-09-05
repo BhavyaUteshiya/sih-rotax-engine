@@ -26,5 +26,62 @@ TRB-04 | Turbo/Int. | T_out = T_amb * (1 + (PR^... - 1)/eta_c)        | Compress
 TRB-05 | Turbo/Int. | dw/dt = (P_t - P_c - P_loss)/(J * w)            | Turbo Shaft Dynamics               | VERIFIED
 TRB-06 | Turbo/Int. | dP/dt = (R*T_map / V_map) * (m_c - m_eng)       | Intake Plenum Pressure State       | VERIFIED
 ========================================================================================================================
+Airflow / Engine Breathing (Phase 1C)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+AIR-01 | Airflow    | V_cyl = (pi/4) * bore^2 * stroke                | Cylinder Swept Volume              | VERIFIED
+AIR-02 | Airflow    | V_d = N_cyl * V_cyl                             | Total Engine Displacement          | VERIFIED
+AIR-03 | Airflow    | rho_charge = P_charge / (R_air * T_charge)      | Charge-Air Density                 | STD PHYSICS
+AIR-04 | Airflow    | m_cyl = eta_v * rho_charge * V_d * (N/2)        | Speed-Density Cylinder Filling     | ESTAB MVEM 
+AIR-05 | Airflow    | N = RPM / 60                                    | Engine RPM to rev/s                | VERIFIED
+AIR-06 | Airflow    | A_eff = A_idle + th^2 * (A_max - A_idle)        | Throttle Effective Area Surrogate  | CALIBRAT
+AIR-07 | Airflow    | m_th = C_d*A*P/sqrt(RT)*sqrt(...)               | Compressible Restriction Flow      | STD FLUID
+AIR-08 | Airflow    | PR <= (2/(gamma+1))^(gamma/(gamma-1))           | Choked Flow Criterion              | STD FLUID
+AIR-09 | Airflow    | eta_v = eta_v_base + c_rpm*(...) + c_p*(...)    | Volumetric Efficiency Surrogate    | CALIBRAT
+AIR-10 | Airflow    | m_th(P_charge) - m_cyl(P_charge) = 0            | Downstream Pressure Equilibration  | NUM SOLVER
+========================================================================================================================
+Fuel Flow and Combustion (Phase 1D)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+FUEL-01| Fuel Flow  | phi = base + f_load(P) + f_speed(N)             | Equivalence Ratio Surrogate        | CALIBRAT
+FUEL-02| Fuel Flow  | dP_fuel = P_fuel - P_airbox                     | Fuel Pressure Differential         | VERIFIED
+FUEL-03| Fuel Flow  | m_fuel = m_air / (AFR_stoich / phi)             | Fuel Mass Flow                     | VERIFIED
+FUEL-04| Fuel Flow  | V_fuel = m_fuel / rho_fuel * 3600 * 1000        | Fuel Volume Flow (L/h)             | VERIFIED
+ENE-01 | Energy     | P_release = m_fuel * LHV * eta_comb             | Chemical Heat Release              | ESTAB MVEM
+ENE-02 | Energy     | P_ind = P_release * eta_ind                     | Indicated Mechanical Power         | ESTAB MVEM
+ENE-03 | Energy     | P_exh = (P_release - P_ind) * eta_exh_partition | Exhaust Sensible Power Partition   | ESTAB MVEM
+COMB-01| Combustion | x_b(theta) = 1 - exp(-a*((theta-theta0)/dt)^...)| Wiebe Burn Fraction Surrogate      | ESTAB MVEM
+EXH-01 | Exhaust    | m_exh = m_air + m_fuel                          | Exhaust Mass Conservation          | VERIFIED
+EXH-02 | Exhaust    | T_exh = T_charge + P_exh / (m_exh * Cp_exh)     | Exhaust Temperature Energy Bal.    | VERIFIED
+EXH-03 | Exhaust    | P_exh = P_amb + K_exh * m_exh^2                 | Exhaust Backpressure Surrogate     | CALIBRAT
+========================================================================================================================
+Engine Dynamics and Torque Balance (Phase 1E)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+DYN-01 | Dynamics   | sum(T) = T_ind + T_start - T_fric - T_load      | Torque Balance                     | VERIFIED
+DYN-02 | Dynamics   | T_ind = P_ind / w_engine                        | Indicated Torque                   | VERIFIED
+DYN-03 | Dynamics   | dw/dt = sum(T) / J_eq                           | Angular Acceleration               | VERIFIED
+DYN-04 | Dynamics   | RPM = w_engine * 60 / (2*pi)                    | Angular Velocity to RPM Conversion | VERIFIED
+FRIC-01| Dynamics   | T_fric = C0 + C1*w + C2*w^2                     | Friction Torque Surrogate          | CALIBRAT
+GEAR-01| Dynamics   | w_prop = w_engine * R_gearbox                   | Gearbox Speed Reduction            | VERIFIED
+GEAR-02| Dynamics   | T_load = T_prop * R_gearbox / eta_gearbox       | Propeller Load Reflected to Engine | VERIFIED
+========================================================================================================================
 
-*(Downstream modules like 1C-Airflow and 1D-Combustion will be registered here once implemented.)*
+========================================================================================================================
+Propeller Aerodynamics (Phase 1F)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+PROP-01| Propeller  | J_p = v_air / (n_prop * D_prop)                 | Propeller Advance Ratio            | STD AERO
+PROP-02| Propeller  | C_T = f(J_p)                                    | Propeller Thrust Coefficient       | ESTAB MVEM
+PROP-03| Propeller  | C_Q = f(J_p)                                    | Propeller Torque Coefficient       | ESTAB MVEM
+PROP-04| Propeller  | T_prop = C_T * rho * n_prop^2 * D_prop^4        | Aerodynamic Propeller Thrust       | STD AERO
+PROP-05| Propeller  | Q_prop = C_Q * rho * n_prop^2 * D_prop^5        | Aerodynamic Propeller Torque       | STD AERO
+PROP-06| Propeller  | P_prop = 2 * pi * n_prop * Q_prop               | Absorbed Propeller Power           | VERIFIED
+PROP-07| Propeller  | eta_prop = (T_prop * v_air) / P_prop            | Propulsive Efficiency              | VERIFIED
+========================================================================================================================
+
+*(Downstream modules like 1G-Thermal physics will be registered here once implemented.)*

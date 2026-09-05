@@ -3,11 +3,16 @@
 This document records the external authoritative sources used specifically for the Phase 1B Turbo/Intake model.
 
 ## [REF-TRB-01] Rotax 914 Turbocharger Modeling Research
-- **Title:** "High Altitude Performance of a Turbocharged SI Engine for MALE UAVs"
-- **Author/Organization:** University Research (General representation of one-dimensional GT-Power style engine models)
+- **Title:** Performance prediction of aircraft gasoline turbocharged engine at high-altitudes
+- **Author/Organization:** Hossein Mansouri, Fatholah Ommi
+- **Journal:** Applied Thermal Engineering
+- **Year:** 2019
+- **DOI:** 10.1016/j.applthermaleng.2019.04.116
+- **URL:** [https://www.sciencedirect.com/science/article/pii/S1359431118380268](https://www.sciencedirect.com/science/article/pii/S1359431118380268)
 - **Source Type:** Peer-reviewed Journal Article
-- **Information Used:** The phenomenon of compressor PR scaling with altitude to maintain MAP, choking limits, and the validation strategy using manufacturer curves.
+- **Information Used:** Rotax 914 high-altitude engine modeling context, turbocharger performance / compressor behavior methodology, high-altitude pressure-ratio demand, compressor choking / high-altitude limitation behavior, and validation methodology using manufacturer turbocharger information.
 - **Authority Level:** HIGH (Primary architecture justification)
+- **Important Limitations:** This paper does NOT provide our current surrogate parameters. Our surrogate is NOT the exact published model. We do NOT claim exact Rotax turbo RPM values from our surrogate. Our surrogate parameters ($k_{pr}$, $k_{flow}$, efficiencies, inertia, etc.) are estimated/calibrated based on general methodology, not copied from the paper.
 - **Date Accessed:** September 2026
 
 ## [REF-TRB-02] Rotax 914 EASA Type Certificate

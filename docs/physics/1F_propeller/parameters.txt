@@ -1,0 +1,8 @@
+PROP_DIAMETER      1.7      m        CALIBRATION           Propeller diameter (from ROTAX_914_ENGINE_DATA.txt, Synthetic/Calibration)
+CT_STATIC          0.075    -        CALIBRATION           Thrust coefficient at zero airspeed (from engine data)
+CT_J_COEFF        -0.035    -        CALIBRATION           Linear decay slope for thrust coefficient
+CT_MIN             0.0      -        CALIBRATION           Minimum physical thrust coefficient
+CQ_STATIC          0.0125   -        CALIBRATION           Torque coefficient at zero airspeed (from engine data)
+CQ_J_COEFF        -0.008    -        CALIBRATION           Linear decay slope for torque coefficient
+CQ_MIN             0.002    -        CALIBRATION           Minimum physical torque coefficient (drag)
+MIN_RPM_THRESHOLD  0.1      RPM      SYSTEM                Threshold below which prop physics yield 0

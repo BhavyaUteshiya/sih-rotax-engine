@@ -1,6 +1,6 @@
 import math
 from dataclasses import dataclass
-from .atmosphere import AtmosphericState
+from .atmosphere import AtmosphericState, R_D
 
 @dataclass
 class ExhaustState:
@@ -31,7 +31,7 @@ class TurboIntakeModel:
     GAMMA_EXH = 1.33
     CP_AIR = 1005.0   # J/(kg*K)
     CP_EXH = 1150.0   # J/(kg*K)
-    R_AIR = 287.05    # J/(kg*K)
+    R_AIR = R_D       # J/(kg*K) Imported from Phase 1A for consistency
     
     # Calibration / Surrogate Parameters (Estimated)
     J_TURBO = 0.0001        # Turbo rotational inertia (kg.m^2)

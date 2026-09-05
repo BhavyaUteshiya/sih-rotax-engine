@@ -1,0 +1,26 @@
+# Phase 1D: Combustion Model Parameters
+
+## General Gasoline Assumptions
+- AFR_STOICH = 14.7 (Generic Gasoline, non-proprietary assumption)
+- LHV_J_KG = 43.5e6 J/kg (Generic Aviation Fuel/Mogas LHV)
+- FUEL_DENSITY_KG_M3 = 720.0 kg/m^3 (Approximate density for vol conversions)
+
+## Rotax Constraints (from public docs)
+- FUEL_PRESS_MIN_PA = 15000.0 (0.15 bar minimum differential)
+- FUEL_PRESS_NOM_PA = 25000.0 (0.25 bar nominal differential)
+- FUEL_PRESS_MAX_PA = 35000.0 (0.35 bar maximum differential)
+- RPM_NOMINAL = 5800.0 (Rated takeoff RPM)
+
+## Engineering Surrogates (Estimated / Calibration)
+- PHI_BASE = 0.95
+- PHI_MIN = 0.80
+- PHI_MAX = 1.30
+- P_MAP_NOMINAL_PA = 100000.0
+- ETA_COMB_MAX = 0.98
+- ETA_INDICATED = 0.35
+- ETA_EXHAUST_PARTITION = 0.60
+- WIEBE_A = 5.0
+- WIEBE_M = 2.0
+- THETA_0 = -15.0 deg aTDC
+- BURN_DURATION_NOMINAL = 50.0 deg
+- K_EXHAUST = 1,500,000.0 (Exhaust resistance surrogate)

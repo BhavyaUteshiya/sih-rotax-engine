@@ -1,0 +1,20 @@
+PHASE 1C AIRFLOW - PARAMETER REGISTRY
+
+| Symbol      | Value    | Unit  | Source           | Classification         | Purpose | Editable? |
+|-------------|----------|-------|------------------|------------------------|---------|-----------|
+| N_CYL       | 4        | -     | EASA E.122       | VERIFIED               | Rotax 914 cylinder count | No |
+| BORE_M      | 0.0795   | m     | EASA E.122       | VERIFIED               | Cylinder bore | No |
+| STROKE_M    | 0.061    | m     | EASA E.122       | VERIFIED               | Piston stroke | No |
+| V_D         | 0.0012112| m³    | Derived          | VERIFIED               | Total displacement | No |
+| R_AIR       | 287.05   | J/kgK | Standard         | VERIFIED               | Dry air specific gas constant | No |
+| GAMMA       | 1.4      | -     | Standard         | VERIFIED               | Heat capacity ratio | No |
+| C_D         | 0.8      | -     | Estimated        | ESTIMATED              | Discharge coefficient for throttle | Yes |
+| A_MAX       | 0.002    | m²    | Estimated        | ESTIMATED              | Max effective throttle area | Yes |
+| A_IDLE      | 0.0001   | m²    | Estimated        | ESTIMATED              | Closed throttle effective area | Yes |
+| ETA_V_BASE  | 0.75     | -     | Estimated        | CALIBRATION SURROGATE  | Base volumetric efficiency | Yes |
+| ETA_V_MIN   | 0.1      | -     | Bounds           | ESTIMATED              | Minimum allowable eta_v | No |
+| ETA_V_MAX   | 0.95     | -     | Bounds           | ESTIMATED              | Maximum allowable eta_v | No |
+| RPM_OPT     | 5800.0   | rpm   | EASA E.122       | CALIBRATION TARGET     | RPM for peak volumetric efficiency | Yes |
+| C_RPM       | 0.15     | -     | Calibration      | CALIBRATION SURROGATE  | Parabolic shape magnitude for RPM | Yes |
+| C_P         | 0.05     | -     | Calibration      | CALIBRATION SURROGATE  | Pressure sensitivity magnitude | Yes |
+| P_REF       | 101325.0 | Pa    | Standard         | VERIFIED               | Reference pressure for eta_v scaling | No |
