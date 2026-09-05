@@ -11,7 +11,7 @@ def base_context():
     return OperatingContext(
         ambient_temp_c=15.0,
         ambient_pressure_kpa=101.325,
-        throttle_position=50.0
+        throttle_position=0.5
     )
 
 @pytest.fixture
@@ -29,7 +29,8 @@ def nominal_observed():
         coolant_temp_c=80.0,
         oil_temp_c=90.0,
         oil_pressure_bar=3.5,
-        turbo_boost_bar=0.5
+        turbo_boost_bar=0.5,
+        data_quality="GOOD"
     )
 
 
