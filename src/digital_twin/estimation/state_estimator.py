@@ -56,18 +56,25 @@ class StateEstimator:
         self.R = np.diag(cfg.get("R", [1.0] * 8))
         self.P0 = np.diag(cfg.get("P0", [1.0] * 8))
 
-    def _state_to_array(self, expected: HealthyExpectedState, observed: ObservedState) -> np.ndarray:
-        """Extracts the 8-dim state vector from a state object, throwing error if data is missing."""
+    def _extract_expected_array(self, expected: HealthyExpectedState) -> np.ndarray:
+        arr = np.zeros(8)
+        for i, key in enumerate(self.STATE_KEYS):
+            val = getattr(expected, key, None)
+            if val is None or np.isnan(val) or np.isinf(val):
+                arr[i] = np.nan
+            else:
+                arr[i] = float(val)
+        return arr
+
+    def _extract_observed_array(self, observed: ObservedState) -> np.ndarray:
+        """Extracts the 8-dim measurement vector from a state object. Missing/invalid become NaN."""
         arr = np.zeros(8)
         for i, key in enumerate(self.STATE_KEYS):
             val = getattr(observed, key, None)
             if val is None or np.isnan(val) or np.isinf(val):
-                val = getattr(expected, key, None)
-            
-            if val is None or np.isnan(val) or np.isinf(val):
                 arr[i] = np.nan
             else:
-                arr[i] = val
+                arr[i] = float(val)
         return arr
 
     def _initialize_filter(self, expected: HealthyExpectedState, observed: ObservedState, dt: float) -> bool:
@@ -75,9 +82,8 @@ class StateEstimator:
         Initializes the UKF using the best available combination of expected and observed data.
         Returns True if successful, False if insufficient data.
         """
-        exp_arr = self._state_to_array(expected, expected) # Safe extraction
-        # For observed, we use expected as fallback for validation
-        obs_arr = self._state_to_array(expected, observed)
+        exp_arr = self._extract_expected_array(expected)
+        obs_arr = self._extract_observed_array(observed)
         
         # Initialize with observed if valid, otherwise expected
         x0 = np.where(np.isnan(obs_arr), exp_arr, obs_arr)
@@ -131,7 +137,7 @@ class StateEstimator:
         # which is intentional to avoid duplicating Phase 1 physics.
         # x_k|k-1 = x_k-1|k-1 + (exp_k - exp_k-1)
         # For prediction, we just extract the expected state values (so we pass expected as both to avoid throwing on observed)
-        curr_exp_arr = np.nan_to_num(self._state_to_array(expected, expected), nan=0.0)
+        curr_exp_arr = np.nan_to_num(self._extract_expected_array(expected), nan=0.0)
         delta_exp = curr_exp_arr - self.last_expected_state
         
         def process_model(x: np.ndarray, dt_step: float) -> np.ndarray:
@@ -141,7 +147,7 @@ class StateEstimator:
         self.last_expected_state = curr_exp_arr
         
         # 2. Measurement Update (Measurement Model)
-        obs_arr = self._state_to_array(expected, observed)
+        obs_arr = self._extract_observed_array(observed)
         
         valid_indices = []
         valid_measurements = []
@@ -161,6 +167,9 @@ class StateEstimator:
             R_active = self.R[np.ix_(mapping, mapping)]
             
             self.ukf.update(z, measurement_mapping=mapping, R_active=R_active)
+        else:
+            # If no measurements are available, force predict_only semantics
+            predict_only = True
             
         # 3. Populate EstimatedActualState
         est = self._build_estimated_state(expected, self.ukf.x, self.ukf.P)

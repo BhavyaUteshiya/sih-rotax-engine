@@ -66,7 +66,6 @@ def test_prediction():
     obs1 = ObservedState(rpm=1000.0)
     
     estimator._initialize_filter(exp1, obs1, 0.1)
-    estimator.last_expected_state = np.nan_to_num(estimator._state_to_array(exp1, obs1), nan=0.0)
     
     # Process model predicts parallel movement
     exp2 = _get_full_expected_state(rpm=1100.0)
@@ -85,7 +84,6 @@ def test_measurement_update():
     obs = ObservedState(rpm=1000.0)
     
     estimator._initialize_filter(exp, obs, 0.1)
-    estimator.last_expected_state = np.nan_to_num(estimator._state_to_array(exp, obs), nan=0.0)
     
     # We observe 1200 RPM while expected says 1000. It should move towards 1200.
     est = estimator.estimate(exp, ObservedState(rpm=1200.0), 0.1)
@@ -99,7 +97,6 @@ def test_partial_telemetry():
     exp = _get_full_expected_state(rpm=1000.0, map_bar=1.0)
     obs = ObservedState(rpm=1000.0, map_bar=1.0)
     estimator._initialize_filter(exp, obs, 0.1)
-    estimator.last_expected_state = np.nan_to_num(estimator._state_to_array(exp, obs), nan=0.0)
     
     # Update with map_bar missing
     obs2 = ObservedState(rpm=1100.0, map_bar=None)
@@ -138,7 +135,6 @@ def test_perturbed_telemetry():
     exp = _get_full_expected_state(rpm=2000.0)
     obs = ObservedState(rpm=2000.0)
     estimator._initialize_filter(exp, obs, 0.1)
-    estimator.last_expected_state = np.nan_to_num(estimator._state_to_array(exp, obs), nan=0.0)
     
     # Perturb RPM observation
     est = estimator.estimate(exp, ObservedState(rpm=2500.0), 0.1)
@@ -175,6 +171,36 @@ def test_nan_protection():
     est = estimator.estimate(exp, obs, 0.1)
     assert est.estimation_confidence == 0.0
     assert est.is_prediction_only == True
+
+def test_regression_c_empty_observed_state():
+    # C. Empty ObservedState means 0 measurement channels updated
+    estimator = StateEstimator()
+    exp = _get_full_expected_state(rpm=1000.0)
+    obs = ObservedState(rpm=1000.0)
+    estimator._initialize_filter(exp, obs, 0.1)
+    
+    # Send empty ObservedState
+    est = estimator.estimate(exp, ObservedState(), 0.1)
+    
+    # Should fall back to prediction only because no valid measurements exist
+    assert est.is_prediction_only == True
+    assert est.estimation_confidence == 0.0
+
+def test_regression_d_predict_only():
+    # D. predict_only=True ignores all observations
+    estimator = StateEstimator()
+    exp = _get_full_expected_state(rpm=1000.0)
+    obs = ObservedState(rpm=1000.0)
+    estimator._initialize_filter(exp, obs, 0.1)
+    
+    # Provide valid observations but set predict_only=True
+    obs_valid = ObservedState(rpm=2000.0)
+    est = estimator.estimate(exp, obs_valid, 0.1, predict_only=True)
+    
+    assert est.is_prediction_only == True
+    assert est.estimation_confidence == 0.0
+    # Process model shouldn't have moved towards 2000.0
+    assert np.isclose(estimator.ukf.x[0], 1000.0)
 
 def test_integration():
     # J. Integration
