@@ -1,0 +1,13 @@
+metadata:
+  engine: Rotax 914 UL/F
+  purpose: Phase 1 prototype parameter record
+  authority: mixed; see docs/references/reference_registry.md
+
+gearbox:
+  propeller_to_engine_speed_ratio: 0.41176
+  classification: official_specification_pending_source_verification
+  note: "Runtime convention is omega_prop / omega_engine."
+
+fuel:
+  nominal_pressure_delta_pa: 25000
+  classification: prototype_assumption

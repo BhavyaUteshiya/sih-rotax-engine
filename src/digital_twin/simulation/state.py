@@ -38,3 +38,7 @@ class SimulationInput:
     fuel_pressure_pa: float = 250000.0  # Nominally 2.5 bar
     fuel_pressure_delta_pa: float = 25000.0 # 0.25 bar delta
     starter_engaged: bool = False
+    # Prototype calibration boundary. This is deliberately an input, not an
+    # asserted Rotax specification; the baseline value is recorded in configs/.
+    target_map_at_full_throttle_pa: float = 110000.0
+    propeller_diameter_m: float = 1.7
