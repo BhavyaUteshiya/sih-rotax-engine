@@ -1,6 +1,6 @@
 """
-Expected Behavior Physics Model — Adapter/Interface Extracting Expected Physical States from Module 01.
-SIH26054 — Module 03 Digital Twin Core.
+Expected Behavior Physics Model — Adapter/Interface Extracting Expected Physical States from Phase 1 Simulator.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from typing import Any, Dict, Optional
@@ -10,7 +10,7 @@ from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 
 class ExpectedBehaviorModel:
     """
-    Adapter and interface layer extracting HealthyExpectedState parameters directly from Module 01 physics state.
+    Adapter and interface layer extracting HealthyExpectedState parameters directly from Phase 1 Simulator physics state.
     MANDATE: Does NOT duplicate or re-implement independent physics equations. Reuses authoritative Rotax 914 physics.
     Supports complete 19 internal Category C parameters. Disambiguates combustion_energy, heat_release_rate_w, and combustion_efficiency.
     """
@@ -48,48 +48,55 @@ class ExpectedBehaviorModel:
         prop_load_val = getattr(prop, "aerodynamic_torque_nm", None)
 
         # Engine Dynamics & Basic params
-        rpm_val = getattr(engine_dyn, "engine_rpm", 0.0)
-        torque_val = getattr(engine_dyn, "indicated_torque_nm", 0.0)
-        gearbox_val = getattr(engine_dyn, "propeller_rpm", rpm_val / 2.4286)
+        rpm_val = getattr(engine_dyn, "engine_rpm", None)
+        torque_val = getattr(engine_dyn, "indicated_torque_nm", None)
+        gearbox_val = (rpm_val / 2.4286) if rpm_val is not None else None
 
         # Turbo & Airflow
-        map_pa = getattr(turbo, "manifold_pressure_pa", 101325.0)
-        map_val = map_pa / 100000.0  # Convert Pa to bar
+        map_pa = getattr(turbo, "manifold_pressure_pa", None)
+        map_val = (map_pa / 100000.0) if map_pa is not None else None
         
         # Turbo speed is in rad/s, map to RPM (rad/s * 60 / 2pi)
-        turbo_rad_s = getattr(turbo, "turbo_speed_rad_s", 0.0)
-        turbo_val = turbo_rad_s * 60.0 / (2.0 * 3.1415926535)
+        turbo_rad_s = getattr(turbo, "turbo_speed_rad_s", None)
+        turbo_val = (turbo_rad_s * 60.0 / (2.0 * 3.1415926535)) if turbo_rad_s is not None else None
 
-        air_val = getattr(airflow, "air_mass_flow_kg_s", 0.0) * 3600.0
+        air_val_kg_s = getattr(airflow, "air_mass_flow_kg_s", None)
+        air_val = (air_val_kg_s * 3600.0) if air_val_kg_s is not None else None
 
         # Combustion
-        fuel_val = getattr(combustion, "fuel_mass_flow_kg_s", 0.0) * 3600.0
-        afr_val = getattr(combustion, "air_fuel_ratio", 14.7)
-        comb_eff = getattr(combustion, "combustion_efficiency", 0.0)
+        fuel_val_kg_s = getattr(combustion, "fuel_mass_flow_kg_s", None)
+        fuel_val = (fuel_val_kg_s * 3600.0) if fuel_val_kg_s is not None else None
+        afr_val = getattr(combustion, "air_fuel_ratio", None)
+        comb_eff = getattr(combustion, "combustion_efficiency", None)
         
         # Disambiguation:
         # combustion_energy in Joules is unavailable. heat_release_power_w is Watts.
         comb_energy_val = None
 
-        ind_power = getattr(combustion, "indicated_power_w", 0.0) / 1000.0 # Convert W to kW
+        ind_power_w = getattr(combustion, "indicated_power_w", None)
+        ind_power = (ind_power_w / 1000.0) if ind_power_w is not None else None
         
-        egt_val = getattr(combustion, "exhaust_temperature_k", 288.15) - 273.15
+        egt_k = getattr(combustion, "exhaust_temperature_k", None)
+        egt_val = (egt_k - 273.15) if egt_k is not None else None
 
         # Thermal
-        cht_val = getattr(thermal, "cht_temperature_c", 15.0)
-        oil_temp_val = getattr(thermal, "oil_temperature_c", 15.0)
+        cht_val = getattr(thermal, "cht_temperature_c", None)
+        oil_temp_val = getattr(thermal, "oil_temperature_c", None)
 
         # Not provided by Phase 1 simulator; explicit contract as unmodeled
         oil_press_val = None
         coolant_temp_val = None
 
         # Environment / Derived
-        amb_press_pa = getattr(atm, "pressure_pa", 101325.0)
-        turbo_boost_val = max(0.0, map_val - (amb_press_pa / 100000.0))
+        amb_press_pa = getattr(atm, "pressure_pa", None)
+        if map_val is not None and amb_press_pa is not None:
+            turbo_boost_val = max(0.0, map_val - (amb_press_pa / 100000.0))
+        else:
+            turbo_boost_val = None
 
 
 
-        confidence_val = 1.0 if sim_state is not None else 0.0
+        confidence_val = 0.8 if sim_state is not None else 0.0
 
         return HealthyExpectedState(
             timestamp=timestamp,

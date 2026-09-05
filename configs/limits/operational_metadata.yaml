@@ -1,6 +1,6 @@
 # configs/limits/operational_metadata.yaml
 # Tier 3 (Normal), Tier 4 (Warning), Tier 5 (Critical) Operational Ranges (Metadata only)
-# ⚠ INFORMATIONAL METADATA ONLY — MODULE 01 DOES NOT DIAGNOSE ENGINE FAULTS OR HEALTH
+# ⚠ INFORMATIONAL METADATA ONLY — PHASE 1 SIMULATOR DOES NOT DIAGNOSE ENGINE FAULTS OR HEALTH
 
 metadata:
   classification: "REPRESENTATIVE"

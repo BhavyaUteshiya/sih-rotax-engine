@@ -1,5 +1,5 @@
 # configs/limits/sensor_validity_limits.yaml
-# Tier 2 Physical Plausibility Range & Tier 6 Rate-of-Change Limits (Enforced by Module 01)
+# Tier 2 Physical Plausibility Range & Tier 6 Rate-of-Change Limits (Enforced by Phase 1 Simulator)
 # ⚠ REPRESENTATIVE DEMONSTRATION LIMITS — NOT ACTUAL DRDO / MALE UAV ENGINE SPECIFICATIONS
 
 metadata:

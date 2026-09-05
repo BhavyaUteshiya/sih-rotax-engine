@@ -1,6 +1,6 @@
 """
 Residual Analyzer — Calculates Residuals (Observed - Expected) and Evaluates Configured Thresholds.
-SIH26054 — Module 03 Digital Twin Core.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 import os
@@ -21,6 +21,10 @@ class ResidualAnalyzer:
     rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, combustion_energy,
     combustion_efficiency, indicated_power_kw, torque_n_m, egt_c, cht_c, coolant_temp_c,
     oil_temp_c, oil_pressure_bar, turbo_boost_bar, gearbox_rpm, propeller_load_nm, thrust_n.
+
+    NOTE: The Python values embedded below are emergency fallback defaults ONLY. 
+    They are NOT authoritative Rotax-specific data. The YAML configuration is the 
+    strict authority for all thresholds and limits.
     """
 
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml", engine_config_path: Optional[str] = None) -> None:
@@ -36,8 +40,8 @@ class ResidualAnalyzer:
         self.hard_limits = self._load_hard_limits(engine_config_path)
 
     def _load_thresholds(self, filepath: str) -> Dict[str, Dict[str, Any]]:
-        """Loads residual threshold configurations (value, tolerance_type, debounce_sec) from YAML."""
-        defaults = {
+        """Loads residual threshold configurations from YAML. Uses emergency fallbacks if YAML is missing."""
+        emergency_fallback_defaults = {
             "rpm": {"value": 100.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "map_bar": {"value": 0.05, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
             "turbo_rpm": {"value": 5000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
@@ -60,7 +64,7 @@ class ResidualAnalyzer:
         }
 
         if not os.path.exists(filepath):
-            return defaults
+            return emergency_fallback_defaults
 
         try:
             with open(filepath, "r", encoding="utf-8") as f:
@@ -68,7 +72,7 @@ class ResidualAnalyzer:
             
             thresh_dict = cfg.get("digital_twin", {}).get("residual_thresholds", {})
             result = {}
-            for k, default_vals in defaults.items():
+            for k, default_vals in emergency_fallback_defaults.items():
                 if k in thresh_dict and isinstance(thresh_dict[k], dict):
                     result[k] = {
                         "value": float(thresh_dict[k].get("value", default_vals["value"])),
@@ -79,7 +83,7 @@ class ResidualAnalyzer:
                     result[k] = default_vals
             return result
         except Exception:
-            return defaults
+            return emergency_fallback_defaults
 
     def _load_hard_limits(self, filepath: str) -> Dict[str, Dict[str, float]]:
         """Loads physical operating safety limits from engine configuration to bypass debounce. Returns dict of max_limits and min_limits."""
@@ -111,12 +115,8 @@ class ResidualAnalyzer:
                 max_limits["egt_c"] = float(thermal["max_safe_egt_k"].get("value", 1223.15)) - 273.15
             if "max_safe_oil_temp_k" in thermal:
                 max_limits["oil_temp_c"] = float(thermal["max_safe_oil_temp_k"].get("value", 403.15)) - 273.15
-            # Missing from original yaml parsing, but standard for Rotax 914
-            # We'll use 120 C / 393.15 K if explicitly added to yaml, otherwise we'll assume from the manual
             if "max_safe_coolant_temp_k" in thermal:
                 max_limits["coolant_temp_c"] = float(thermal["max_safe_coolant_temp_k"].get("value", 393.15)) - 273.15
-            else:
-                max_limits["coolant_temp_c"] = 120.0
                 
             lube = cfg.get("lubrication", {})
             if "max_oil_pressure_pa" in lube:

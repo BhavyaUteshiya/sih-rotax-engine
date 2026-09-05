@@ -1,6 +1,6 @@
 """
-Observed State Model — Validated & SI-Normalized Telemetry Ingested strictly from Module 02.
-SIH26054 — Module 03 Digital Twin Core.
+Observed State Model — Validated & SI-Normalized Telemetry Ingested strictly from Phase 2A Telemetry Pipeline.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from dataclasses import dataclass

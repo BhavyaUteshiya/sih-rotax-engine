@@ -1,6 +1,6 @@
 """
 Healthy Expected State Model — Physical Target Values Derived from Healthy Reference Model.
-SIH26054 — Module 03 Digital Twin Core.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from dataclasses import dataclass
@@ -20,29 +20,30 @@ class HealthyExpectedState:
     aircraft_id: str = "rotax_914_uav"
 
     # Physics Expected Engine Parameters (19 Category C Internal Parameters)
-    rpm: float = 0.0
-    map_bar: float = 1.01325
-    turbo_rpm: float = 0.0
-    airflow_kg_h: float = 0.0
-    fuel_flow_kg_h: float = 0.0
-    afr: float = 14.7
+    rpm: Optional[float] = None
+    map_bar: Optional[float] = None
+    turbo_rpm: Optional[float] = None
+    airflow_kg_h: Optional[float] = None
+    fuel_flow_kg_h: Optional[float] = None
+    afr: Optional[float] = None
     combustion_energy: Optional[float] = None
-    combustion_efficiency: float = 0.0
-    indicated_power_kw: float = 0.0
-    torque_n_m: float = 0.0
-    egt_c: float = 15.0
-    cht_c: float = 15.0
+    combustion_efficiency: Optional[float] = None
+    indicated_power_kw: Optional[float] = None
+    torque_n_m: Optional[float] = None
+    egt_c: Optional[float] = None
+    cht_c: Optional[float] = None
     coolant_temp_c: Optional[float] = None
-    oil_temp_c: float = 15.0
+    oil_temp_c: Optional[float] = None
     oil_pressure_bar: Optional[float] = None
-    turbo_boost_bar: float = 0.0
-    gearbox_rpm: float = 0.0
+    turbo_boost_bar: Optional[float] = None
+    gearbox_rpm: Optional[float] = None
     propeller_load_nm: Optional[float] = None
     thrust_n: Optional[float] = None
 
     # Defines the confidence level of the physical reference model output (0.0 to 1.0).
     # Confidence degrades if inputs are out of bounds or during extreme transient maneuvers.
-    model_confidence: float = 1.0
+    # Note: Sophisticated confidence estimation belongs to Phase 2E.
+    model_confidence: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes HealthyExpectedState to a dictionary."""
@@ -51,23 +52,23 @@ class HealthyExpectedState:
             "sequence_number": self.sequence_number,
             "engine_id": self.engine_id,
             "aircraft_id": self.aircraft_id,
-            "rpm": round(self.rpm, 2),
-            "map_bar": round(self.map_bar, 4),
-            "turbo_rpm": round(self.turbo_rpm, 1),
-            "airflow_kg_h": round(self.airflow_kg_h, 3),
-            "fuel_flow_kg_h": round(self.fuel_flow_kg_h, 3),
-            "afr": round(self.afr, 2),
+            "rpm": round(self.rpm, 2) if self.rpm is not None else None,
+            "map_bar": round(self.map_bar, 4) if self.map_bar is not None else None,
+            "turbo_rpm": round(self.turbo_rpm, 1) if self.turbo_rpm is not None else None,
+            "airflow_kg_h": round(self.airflow_kg_h, 3) if self.airflow_kg_h is not None else None,
+            "fuel_flow_kg_h": round(self.fuel_flow_kg_h, 3) if self.fuel_flow_kg_h is not None else None,
+            "afr": round(self.afr, 2) if self.afr is not None else None,
             "combustion_energy": round(self.combustion_energy, 2) if self.combustion_energy is not None else None,
-            "combustion_efficiency": round(self.combustion_efficiency, 4),
-            "indicated_power_kw": round(self.indicated_power_kw, 2),
-            "torque_n_m": round(self.torque_n_m, 2),
-            "egt_c": round(self.egt_c, 2),
-            "cht_c": round(self.cht_c, 2),
+            "combustion_efficiency": round(self.combustion_efficiency, 4) if self.combustion_efficiency is not None else None,
+            "indicated_power_kw": round(self.indicated_power_kw, 2) if self.indicated_power_kw is not None else None,
+            "torque_n_m": round(self.torque_n_m, 2) if self.torque_n_m is not None else None,
+            "egt_c": round(self.egt_c, 2) if self.egt_c is not None else None,
+            "cht_c": round(self.cht_c, 2) if self.cht_c is not None else None,
             "coolant_temp_c": round(self.coolant_temp_c, 2) if self.coolant_temp_c is not None else None,
-            "oil_temp_c": round(self.oil_temp_c, 2),
+            "oil_temp_c": round(self.oil_temp_c, 2) if self.oil_temp_c is not None else None,
             "oil_pressure_bar": round(self.oil_pressure_bar, 4) if self.oil_pressure_bar is not None else None,
-            "turbo_boost_bar": round(self.turbo_boost_bar, 4),
-            "gearbox_rpm": round(self.gearbox_rpm, 2),
+            "turbo_boost_bar": round(self.turbo_boost_bar, 4) if self.turbo_boost_bar is not None else None,
+            "gearbox_rpm": round(self.gearbox_rpm, 2) if self.gearbox_rpm is not None else None,
             "propeller_load_nm": round(self.propeller_load_nm, 2) if self.propeller_load_nm is not None else None,
             "thrust_n": round(self.thrust_n, 2) if self.thrust_n is not None else None,
             "model_confidence": self.model_confidence,

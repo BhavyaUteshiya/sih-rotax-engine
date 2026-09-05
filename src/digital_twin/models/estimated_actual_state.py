@@ -1,6 +1,6 @@
 """
 Estimated Actual State Model — The Digital Twin's best estimate of the actual physical state.
-SIH26054 — Module 03 Digital Twin Core.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from dataclasses import dataclass

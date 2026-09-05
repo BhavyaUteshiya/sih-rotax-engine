@@ -1,6 +1,6 @@
 """
 Healthy Reference Model Interface.
-SIH26054 — Module 03 Digital Twin Core.
+SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 from typing import Any, Optional

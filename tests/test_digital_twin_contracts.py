@@ -32,8 +32,8 @@ def test_default_state_validity():
     assert op_ctx.altitude_m == 0.0
     assert health.turbo_efficiency_degradation == 1.0
     assert obs.rpm is None  # Observations default to missing
-    assert exp.rpm == 0.0   # Healthy expectations default to physical 0
-    assert est.rpm == 0.0
+    assert exp.rpm is None  # Healthy expectations default to missing until explicitly set
+    assert est.rpm == 0.0   # Estimations default to 0.0
     assert res.rpm is None
     assert dt.status == DigitalTwinStatus.WAITING_FOR_DATA
 

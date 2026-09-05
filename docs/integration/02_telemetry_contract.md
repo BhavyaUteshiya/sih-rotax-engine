@@ -1,6 +1,6 @@
 # Telemetry Contract Specification
 
-Every telemetry sample produced by the Module 02 simulator and transported to Module 01 includes:
+Every telemetry sample produced by the Phase 2A Telemetry simulator and transported to Phase 1 Simulator includes:
 
 - `simulation_timestamp`: Elapsed time in seconds (`dt_telemetry = 0.02 s`)
 - `engine_index`: Engine 1 or Engine 2

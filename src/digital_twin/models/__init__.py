@@ -1,5 +1,5 @@
 """
-Module 03 Digital Twin Core Models.
+Phase 2 Digital Twin Digital Twin Core Models.
 """
 
 from .operating_context import OperatingContext
