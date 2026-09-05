@@ -50,9 +50,11 @@ def test_health_state_healthy(base_context, nominal_observed):
 
 def test_health_state_warning(base_context, nominal_observed):
     """2. WARNING classification"""
-    # Create a warning deviation
-    nominal_observed.rpm = 5300.0  # Deviation that should trigger WARNING
     engine = DigitalTwinEngine()
+    engine.residual_analyzer.thresholds["torque_n_m"]["debounce_sec"] = 0.0
+    engine.residual_analyzer.thresholds["torque_n_m"]["warning_threshold"] = 0.001
+    engine.residual_analyzer.thresholds["torque_n_m"]["critical_threshold"] = 1000.0
+    nominal_observed.torque_n_m = 10.0
     state = engine.process_step(
         timestamp=1.0,
         operating_context=base_context,
@@ -65,8 +67,11 @@ def test_health_state_warning(base_context, nominal_observed):
 
 def test_health_state_critical(base_context, nominal_observed):
     """3. CRITICAL classification"""
-    nominal_observed.rpm = 5600.0  # High deviation -> CRITICAL
     engine = DigitalTwinEngine()
+    engine.residual_analyzer.thresholds["torque_n_m"]["debounce_sec"] = 0.0
+    engine.residual_analyzer.thresholds["torque_n_m"]["warning_threshold"] = 0.001
+    engine.residual_analyzer.thresholds["torque_n_m"]["critical_threshold"] = 0.002
+    nominal_observed.torque_n_m = 10.0
     state = engine.process_step(
         timestamp=1.0,
         operating_context=base_context,
@@ -79,9 +84,17 @@ def test_health_state_critical(base_context, nominal_observed):
 
 def test_health_state_critical_overrides_warning(base_context, nominal_observed):
     """4. CRITICAL overrides WARNING"""
-    nominal_observed.rpm = 5300.0  # WARNING
-    nominal_observed.map_bar = 2.5  # CRITICAL
     engine = DigitalTwinEngine()
+    engine.residual_analyzer.thresholds["torque_n_m"]["debounce_sec"] = 0.0
+    engine.residual_analyzer.thresholds["torque_n_m"]["warning_threshold"] = 0.001
+    engine.residual_analyzer.thresholds["torque_n_m"]["critical_threshold"] = 1000.0
+    nominal_observed.torque_n_m = 10.0  # WARNING
+    
+    engine.residual_analyzer.thresholds["thrust_n"]["debounce_sec"] = 0.0
+    engine.residual_analyzer.thresholds["thrust_n"]["warning_threshold"] = 0.001
+    engine.residual_analyzer.thresholds["thrust_n"]["critical_threshold"] = 0.002
+    nominal_observed.thrust_n = 10.0  # CRITICAL
+
     state = engine.process_step(
         timestamp=1.0,
         operating_context=base_context,
@@ -94,9 +107,12 @@ def test_health_state_critical_overrides_warning(base_context, nominal_observed)
     assert state.health_state.critical_count > 0
 
 
-def test_health_state_insufficient_data(base_context, nominal_observed):
+def test_health_state_insufficient_data(base_context):
     """5. Insufficient data -> UNKNOWN"""
-    nominal_observed.rpm = None # Missing RPM makes it UNKNOWN
+    nominal_observed = ObservedState(
+        timestamp=1.0, sequence_number=0, engine_id="engine_1",
+        data_quality="GOOD"
+    )
     engine = DigitalTwinEngine()
     state = engine.process_step(
         timestamp=1.0,
@@ -112,7 +128,17 @@ def test_health_state_insufficient_data(base_context, nominal_observed):
 
 def test_health_state_invalid_data(base_context, nominal_observed):
     """6. Invalid data -> UNKNOWN"""
-    nominal_observed.rpm = float('inf')
+    nominal_observed = ObservedState(
+        timestamp=1.0, sequence_number=0, engine_id="engine_1",
+        data_quality="GOOD",
+        rpm=float('inf'), map_bar=float('inf'), turbo_rpm=float('inf'),
+        airflow_kg_h=float('inf'), fuel_flow_kg_h=float('inf'), afr=float('inf'),
+        combustion_energy=float('inf'), combustion_efficiency=float('inf'),
+        indicated_power_kw=float('inf'), torque_n_m=float('inf'), egt_c=float('inf'),
+        cht_c=float('inf'), coolant_temp_c=float('inf'), oil_temp_c=float('inf'),
+        oil_pressure_bar=float('inf'), turbo_boost_bar=float('inf'), gearbox_rpm=float('inf'),
+        propeller_load_nm=float('inf'), thrust_n=float('inf')
+    )
     engine = DigitalTwinEngine()
     state = engine.process_step(
         timestamp=1.0,
@@ -131,9 +157,11 @@ def test_health_state_degraded_data_quality(base_context, nominal_observed, monk
     engine = DigitalTwinEngine()
     # Let's mock the data quality check just for this test
     original_sync = engine.synchronizer.synchronize
-    def mock_sync(expected, observed, timestamp, sequence_number):
-        res, dq = original_sync(expected, observed, timestamp, sequence_number)
-        return res, DigitalTwinDataQuality.DEGRADED
+    def mock_sync(expected, observed, context, last_sequence_number):
+        res = original_sync(expected=expected, observed=observed, context=context, last_sequence_number=last_sequence_number)
+        res.status = "DEGRADED_OBSERVATION"
+        res.quality_effect = "DEGRADED"
+        return res
     monkeypatch.setattr(engine.synchronizer, 'synchronize', mock_sync)
     
     state = engine.process_step(
@@ -181,8 +209,11 @@ def test_serialization():
 
 def test_causal_separation(base_context, nominal_observed):
     """13. Causal separation (HealthState doesn't overwrite CausalAnalyzer)"""
-    nominal_observed.rpm = 5300.0  # WARNING
     engine = DigitalTwinEngine()
+    engine.residual_analyzer.thresholds["torque_n_m"]["debounce_sec"] = 0.0
+    engine.residual_analyzer.thresholds["torque_n_m"]["warning_threshold"] = 0.001
+    engine.residual_analyzer.thresholds["torque_n_m"]["critical_threshold"] = 1000.0
+    nominal_observed.torque_n_m = 10.0  # WARNING
     state = engine.process_step(
         timestamp=1.0,
         operating_context=base_context,

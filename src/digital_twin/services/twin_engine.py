@@ -92,6 +92,8 @@ class DigitalTwinEngine:
             last_sequence_number=self.last_sequence[engine_index]
         )
         
+        valid_evidence_count = 0
+        
         # 4. Only Calculate Residuals if Synchronized
         if not sync_result.is_synchronized:
             # Bypass downstream evaluation if we cannot align the signals deterministically.
@@ -128,6 +130,14 @@ class DigitalTwinEngine:
             # 5. Calculate Residuals
             residuals = self.residual_analyzer.analyze(expected, observed, estimated_state)
     
+            for param in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+                res = getattr(residuals, param)
+                if res and res.status not in ("MISSING", "INVALID_NAN", "INVALID_INF"):
+                    valid_evidence_count += 1
+
             # 6. Perform Causal Deviation Analysis
             causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
             self.last_causal_analysis[engine_index] = causal_res
@@ -140,7 +150,7 @@ class DigitalTwinEngine:
             # engineering/calibration policy values reflecting the twin's confidence in its
             # assessment of the engine state. They are NOT probabilities and do NOT imply
             # ML/stochastic probability of engine health.
-            if residuals.missing_count + residuals.invalid_count > 0:
+            if valid_evidence_count == 0:
                 status = DigitalTwinStatus.INSUFFICIENT_DATA
                 data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
                 confidence = 0.0  # Policy: Insufficient/invalid residual inputs block assessment. Confidence drops.
@@ -192,10 +202,10 @@ class DigitalTwinEngine:
             health_level = HealthLevel.UNKNOWN
             is_assessable = False
             assessment_reason = "Synchronization failed."
-        elif residuals.missing_count + residuals.invalid_count > 0:
+        elif valid_evidence_count == 0:
             health_level = HealthLevel.UNKNOWN
             is_assessable = False
-            assessment_reason = "Insufficient or invalid data for assessment."
+            assessment_reason = "Insufficient valid evidence for assessment."
         elif residuals.criticals_count > 0:
             health_level = HealthLevel.CRITICAL
             assessment_reason = "Critical physical deviation detected."
