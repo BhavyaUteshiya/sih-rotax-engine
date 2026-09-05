@@ -48,8 +48,8 @@ def test_complete_state_construction_and_isolation():
     est = EstimatedActualState(rpm=5510.0, map_bar=1.11, estimation_confidence=0.95)
     
     res = ResidualState(
-        rpm=ParameterResidual.compute("rpm", exp.rpm, obs.rpm, threshold=50.0),
-        map_bar=ParameterResidual.compute("map_bar", exp.map_bar, obs.map_bar, threshold=0.05)
+        rpm=ParameterResidual.compute("rpm", exp.rpm, obs.rpm, warning_threshold=50.0, critical_threshold=100.0, denominator_floor=1.0),
+        map_bar=ParameterResidual.compute("map_bar", exp.map_bar, obs.map_bar, warning_threshold=0.05, critical_threshold=0.1, denominator_floor=0.1)
     )
 
     dt = DigitalTwinState(
@@ -79,7 +79,7 @@ def test_complete_state_construction_and_isolation():
 
     # Verify residuals
     assert res.rpm.residual == (5500.0 - 5520.0) # -20.0
-    assert res.rpm.warning_triggered is False
+    assert res.rpm.status == "GOOD"
     assert res.map_bar.residual == pytest.approx(1.1 - 1.12)
     
     # Confidence and Data Quality bounds
@@ -124,15 +124,18 @@ def test_serialization_round_trip():
 
 def test_residual_invalid_computation():
     """Test ParameterResidual handles missing/nan data appropriately."""
-    missing = ParameterResidual.compute("rpm", 5000.0, None)
-    assert missing.quality == "MISSING"
+    missing = ParameterResidual.compute("rpm", 5000.0, None, 50.0, 100.0, 1.0)
+    assert missing.status == "MISSING"
     assert missing.residual == 0.0
 
-    invalid = ParameterResidual.compute("rpm", 5000.0, float('nan'))
-    assert invalid.quality == "INVALID_NAN"
+    missing_exp = ParameterResidual.compute("rpm", None, 5000.0, 50.0, 100.0, 1.0)
+    assert missing_exp.status == "MISSING"
+
+    invalid = ParameterResidual.compute("rpm", 5000.0, float('nan'), 50.0, 100.0, 1.0)
+    assert invalid.status == "INVALID_NAN"
     
-    invalid_inf = ParameterResidual.compute("rpm", float('inf'), 5000.0)
-    assert invalid_inf.quality == "INVALID_INF"
+    invalid_inf = ParameterResidual.compute("rpm", float('inf'), 5000.0, 50.0, 100.0, 1.0)
+    assert invalid_inf.status == "INVALID_INF"
 
 
 def test_engine_identity_isolation():

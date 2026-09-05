@@ -100,7 +100,7 @@ class CausalAnalyzer:
             param_res = getattr(residual_state, node.param_key, None) if residual_state else None
             if param_res:
                 node.residual_val = param_res.residual
-                if param_res.warning_triggered and param_res.quality == "VALID":
+                if param_res.status in ("WARNING", "CRITICAL"):
                     warning_keys.add(key)
 
         # 2. Recursive helper to check if any upstream ancestor has an active warning

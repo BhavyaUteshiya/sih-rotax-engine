@@ -44,6 +44,9 @@ def test_twin_engine_data_quality_mapping():
     # 4. Test GOOD (no deviations)
     # Give perfectly matching values to the healthy expected state so no deviation is detected
     expected = engine.reference_models[1].step(context, 1.0)
+    expected.afr = 14.7
+    expected.fuel_flow_kg_h = 10.0
+    expected.airflow_kg_h = 147.0
     observed_good = ObservedState(
         engine_id="engine_1",
         data_quality="GOOD",

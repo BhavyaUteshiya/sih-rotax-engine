@@ -63,6 +63,7 @@ def test_downstream_bypass_on_sync_failure(mock_causal, mock_residual):
     
     mock_res_val = MagicMock()
     mock_res_val.warnings_count = 0
+    mock_res_val.criticals_count = 0
     mock_residual.return_value = mock_res_val
     
     state_good = engine.process_step(context, 1.0, obs_good, engine_index=1, timestamp=13.0)

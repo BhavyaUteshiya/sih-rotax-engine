@@ -1,30 +1,28 @@
 """
-Residual Analyzer — Calculates Residuals (Observed - Expected) and Evaluates Configured Thresholds.
+Residual Analyzer — Calculates Residuals (Actual - Expected) and Evaluates Configured Thresholds.
 SIH26054 — Phase 2 Digital Twin Digital Twin Core.
 """
 
 import os
+import math
 from typing import Any, Dict, Optional
 
 import yaml
 
 from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.observed_state import ObservedState
+from src.digital_twin.models.estimated_actual_state import EstimatedActualState
 from src.digital_twin.models.residual_state import ParameterResidual, ResidualState
 
 
 class ResidualAnalyzer:
     """
-    Evaluates parameter-by-parameter residuals between ObservedState and HealthyExpectedState.
+    Evaluates parameter-by-parameter residuals between Actual (Estimated or Observed) and HealthyExpectedState.
     Thresholds are strictly configuration-driven loaded from configs/digital_twin_config.yaml.
     Evaluates EXACTLY the 19 authoritative Category C internal parameters:
     rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, combustion_energy,
     combustion_efficiency, indicated_power_kw, torque_n_m, egt_c, cht_c, coolant_temp_c,
     oil_temp_c, oil_pressure_bar, turbo_boost_bar, gearbox_rpm, propeller_load_nm, thrust_n.
-
-    NOTE: The Python values embedded below are emergency fallback defaults ONLY. 
-    They are NOT authoritative Rotax-specific data. The YAML configuration is the 
-    strict authority for all thresholds and limits.
     """
 
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml", engine_config_path: Optional[str] = None) -> None:
@@ -34,7 +32,7 @@ class ResidualAnalyzer:
         # Debounce filter state
         # engine_id -> { parameter_name -> timestamp_of_first_violation }
         self.violation_start_times: Dict[str, Dict[str, float]] = {}
-        self.debounce_time_sec: float = 2.0  # Require 2 continuous seconds to flag as a warning
+        self.debounce_time_sec: float = 2.0  # Require 2 continuous seconds to flag as a warning/critical
 
         # Hard limits from physical engine config to bypass debounce
         self.hard_limits = self._load_hard_limits(engine_config_path)
@@ -42,25 +40,25 @@ class ResidualAnalyzer:
     def _load_thresholds(self, filepath: str) -> Dict[str, Dict[str, Any]]:
         """Loads residual threshold configurations from YAML. Uses emergency fallbacks if YAML is missing."""
         emergency_fallback_defaults = {
-            "rpm": {"value": 100.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "map_bar": {"value": 0.05, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "turbo_rpm": {"value": 5000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "airflow_kg_h": {"value": 15.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "fuel_flow_kg_h": {"value": 1.2, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "afr": {"value": 0.8, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "combustion_energy": {"value": 1000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "combustion_efficiency": {"value": 0.1, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "indicated_power_kw": {"value": 5.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "torque_n_m": {"value": 15.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "egt_c": {"value": 25.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "cht_c": {"value": 15.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "coolant_temp_c": {"value": 15.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "oil_temp_c": {"value": 10.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "oil_pressure_bar": {"value": 0.5, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "turbo_boost_bar": {"value": 0.05, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "gearbox_rpm": {"value": 50.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "propeller_load_nm": {"value": 10.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
-            "thrust_n": {"value": 50.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0},
+            "rpm": {"warning_threshold": 100.0, "critical_threshold": 200.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "map_bar": {"warning_threshold": 0.05, "critical_threshold": 0.1, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "turbo_rpm": {"warning_threshold": 5000.0, "critical_threshold": 10000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "airflow_kg_h": {"warning_threshold": 15.0, "critical_threshold": 30.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "fuel_flow_kg_h": {"warning_threshold": 1.2, "critical_threshold": 2.4, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "afr": {"warning_threshold": 0.8, "critical_threshold": 1.6, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "combustion_energy": {"warning_threshold": 1000.0, "critical_threshold": 2000.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "combustion_efficiency": {"warning_threshold": 0.1, "critical_threshold": 0.2, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "indicated_power_kw": {"warning_threshold": 5.0, "critical_threshold": 10.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "torque_n_m": {"warning_threshold": 15.0, "critical_threshold": 30.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "egt_c": {"warning_threshold": 25.0, "critical_threshold": 50.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "cht_c": {"warning_threshold": 15.0, "critical_threshold": 30.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "coolant_temp_c": {"warning_threshold": 15.0, "critical_threshold": 30.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "oil_temp_c": {"warning_threshold": 10.0, "critical_threshold": 20.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "oil_pressure_bar": {"warning_threshold": 0.5, "critical_threshold": 1.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "turbo_boost_bar": {"warning_threshold": 0.05, "critical_threshold": 0.1, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "gearbox_rpm": {"warning_threshold": 50.0, "critical_threshold": 100.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "propeller_load_nm": {"warning_threshold": 10.0, "critical_threshold": 20.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
+            "thrust_n": {"warning_threshold": 50.0, "critical_threshold": 100.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0, "denominator_floor": 1e-3},
         }
 
         if not os.path.exists(filepath):
@@ -75,9 +73,11 @@ class ResidualAnalyzer:
             for k, default_vals in emergency_fallback_defaults.items():
                 if k in thresh_dict and isinstance(thresh_dict[k], dict):
                     result[k] = {
-                        "value": float(thresh_dict[k].get("value", default_vals["value"])),
+                        "warning_threshold": float(thresh_dict[k].get("warning_threshold", default_vals["warning_threshold"])),
+                        "critical_threshold": float(thresh_dict[k].get("critical_threshold", default_vals["critical_threshold"])),
                         "tolerance_type": str(thresh_dict[k].get("tolerance_type", default_vals["tolerance_type"])),
-                        "debounce_sec": float(thresh_dict[k].get("debounce_sec", default_vals["debounce_sec"]))
+                        "debounce_sec": float(thresh_dict[k].get("debounce_sec", default_vals["debounce_sec"])),
+                        "denominator_floor": float(thresh_dict[k].get("denominator_floor", default_vals["denominator_floor"]))
                     }
                 else:
                     result[k] = default_vals
@@ -128,9 +128,10 @@ class ResidualAnalyzer:
         except Exception:
             return limits
 
-    def analyze(self, expected: HealthyExpectedState, observed: ObservedState) -> ResidualState:
+    def analyze(self, expected: HealthyExpectedState, observed: ObservedState, estimated: Optional[EstimatedActualState] = None) -> ResidualState:
         """
         Computes ParameterResidual objects for all 19 authoritative internal parameters and aggregates into ResidualState.
+        Uses EstimatedActualState if available and valid (not NaN), otherwise falls back to ObservedState.
         Applies a parameter-specific debounce filter to suppress instantaneous transient warnings.
         """
         engine_id = observed.engine_id
@@ -139,73 +140,87 @@ class ResidualAnalyzer:
 
         computed_residuals = {}
 
+        def get_actual(name: str) -> tuple[Optional[float], str]:
+            if estimated is not None:
+                val = getattr(estimated, name, None)
+                if val is not None and not math.isnan(val):
+                    return val, "ESTIMATED"
+            
+            val = getattr(observed, name, None)
+            if val is not None and not math.isnan(val):
+                return val, "OBSERVED"
+            
+            return None, "NONE"
+
         mappings = [
-            ("rpm", expected.rpm, observed.rpm, "RPM"),
-            ("map_bar", expected.map_bar, observed.map_bar, "bar"),
-            ("turbo_rpm", expected.turbo_rpm, observed.turbo_rpm, "RPM"),
-            ("airflow_kg_h", expected.airflow_kg_h, observed.airflow_kg_h, "kg/h"),
-            ("fuel_flow_kg_h", expected.fuel_flow_kg_h, observed.fuel_flow_kg_h, "kg/h"),
-            ("afr", expected.afr, observed.afr, "ratio"),
-            ("combustion_energy", expected.combustion_energy, observed.combustion_energy, "J"),
-            ("combustion_efficiency", expected.combustion_efficiency, observed.combustion_efficiency, "ratio"),
-            ("indicated_power_kw", expected.indicated_power_kw, observed.indicated_power_kw, "kW"),
-            ("torque_n_m", expected.torque_n_m, observed.torque_n_m, "N*m"),
-            ("egt_c", expected.egt_c, observed.egt_c, "°C"),
-            ("cht_c", expected.cht_c, observed.cht_c, "°C"),
-            ("coolant_temp_c", expected.coolant_temp_c, observed.coolant_temp_c, "°C"),
-            ("oil_temp_c", expected.oil_temp_c, observed.oil_temp_c, "°C"),
-            ("oil_pressure_bar", expected.oil_pressure_bar, observed.oil_pressure_bar, "bar"),
-            ("turbo_boost_bar", expected.turbo_boost_bar, observed.turbo_boost_bar, "bar"),
-            ("gearbox_rpm", expected.gearbox_rpm, observed.gearbox_rpm, "RPM"),
-            ("propeller_load_nm", expected.propeller_load_nm, observed.propeller_load_nm, "N*m"),
-            ("thrust_n", expected.thrust_n, observed.thrust_n, "N"),
+            ("rpm", "RPM"),
+            ("map_bar", "bar"),
+            ("turbo_rpm", "RPM"),
+            ("airflow_kg_h", "kg/h"),
+            ("fuel_flow_kg_h", "kg/h"),
+            ("afr", "ratio"),
+            ("combustion_energy", "J"),
+            ("combustion_efficiency", "ratio"),
+            ("indicated_power_kw", "kW"),
+            ("torque_n_m", "N*m"),
+            ("egt_c", "°C"),
+            ("cht_c", "°C"),
+            ("coolant_temp_c", "°C"),
+            ("oil_temp_c", "°C"),
+            ("oil_pressure_bar", "bar"),
+            ("turbo_boost_bar", "bar"),
+            ("gearbox_rpm", "RPM"),
+            ("propeller_load_nm", "N*m"),
+            ("thrust_n", "N"),
         ]
 
-        for name, exp_val, obs_val, unit in mappings:
-            cfg = self.thresholds.get(name, {"value": 0.0, "tolerance_type": "ABSOLUTE", "debounce_sec": 2.0})
+        for name, unit in mappings:
+            exp_val = getattr(expected, name, None)
+            act_val, act_source = get_actual(name)
+            
+            cfg = self.thresholds.get(name, {
+                "warning_threshold": 0.0,
+                "critical_threshold": 0.0,
+                "tolerance_type": "ABSOLUTE",
+                "debounce_sec": 2.0,
+                "denominator_floor": 1e-3
+            })
             
             res = ParameterResidual.compute(
                 parameter=name,
                 expected=exp_val,
-                observed=obs_val,
-                threshold=cfg["value"],
+                actual=act_val,
+                actual_source=act_source,
+                warning_threshold=cfg["warning_threshold"],
+                critical_threshold=cfg["critical_threshold"],
                 tolerance_type=cfg["tolerance_type"],
+                denominator_floor=cfg["denominator_floor"],
                 unit=unit,
                 timestamp=observed.timestamp
             )
             
             # Apply debounce logic for transient handling
-            if res.warning_triggered:
-                # Severe/hard-limit bypass check
+            if res.status in ("WARNING", "CRITICAL"):
                 bypass_debounce = False
                 
-                # Check upper limit
-                if name in self.hard_limits.get("max", {}):
-                    if obs_val >= self.hard_limits["max"][name]:
+                # Severe/hard-limit bypass check
+                if act_val is not None:
+                    if name in self.hard_limits.get("max", {}) and act_val >= self.hard_limits["max"][name]:
                         bypass_debounce = True
-                        
-                # Check lower limit
-                if name in self.hard_limits.get("min", {}):
-                    if obs_val <= self.hard_limits["min"][name]:
+                    if name in self.hard_limits.get("min", {}) and act_val <= self.hard_limits["min"][name]:
                         bypass_debounce = True
                 
                 if bypass_debounce or cfg["debounce_sec"] <= 0.0:
-                    # Clear any tracked start time since we are forcing it now
                     if name in self.violation_start_times[engine_id]:
                         del self.violation_start_times[engine_id][name]
-                    # warning_triggered remains True
                 else:
                     if name not in self.violation_start_times[engine_id]:
-                        # Record the exact simulation time the violation began
                         self.violation_start_times[engine_id][name] = observed.timestamp
                     
-                    # Check if the violation has persisted long enough
                     duration = observed.timestamp - self.violation_start_times[engine_id][name]
                     if duration < cfg["debounce_sec"]:
-                        # Suppress the instantaneous warning for legitimate transients
-                        res.warning_triggered = False
+                        res.status = "GOOD"
             else:
-                # If within threshold, clear any tracked violation start time
                 if name in self.violation_start_times[engine_id]:
                     del self.violation_start_times[engine_id][name]
                     

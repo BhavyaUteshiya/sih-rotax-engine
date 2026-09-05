@@ -113,3 +113,12 @@ EST-04 | State Est. | K_k = P_{xz} * (P_{zz})^{-1}                    | Kalman G
 EST-05 | State Est. | x_{k|k} = x_{k|k-1} + K_k * (z_k - z_{k|k-1})   | UKF State Measurement Update       | UKF MATH
 EST-06 | State Est. | P_{k|k} = P_{k|k-1} - K_k * P_{zz} * K_k^T      | UKF A Posteriori Covariance        | UKF MATH
 ========================================================================================================================
+========================================================================================================================
+Residual and Confidence Analysis (Phase 2E)
+========================================================================================================================
+ID     | Subsystem  | Equation                                        | Meaning                            | Class    
+------------------------------------------------------------------------------------------------------------------------
+RES-01 | Residuals  | res_i = actual_i - expected_i                   | Absolute Deviation Calculation     | ANALYTICS
+RES-02 | Residuals  | rel_err_i = |res_i| / max(|expected_i|, floor)  | Relative Error w/ Zero Protection  | ANALYTICS
+RES-03 | Residuals  | conf = f_aggregate(warning_count, critical_count)| Digital Twin Confidence Score      | LOGIC
+========================================================================================================================

@@ -12,18 +12,20 @@ from typing import Any, Dict, Optional
 class ParameterResidual:
     """
     Represents calculated residual error for a single physical parameter:
-    residual = observed - expected
-    relative_error = (observed - expected) / expected (or 0.0 if expected is 0)
+    residual = actual - expected
+    relative_error = (actual - expected) / expected (or 0.0 if expected is 0)
     """
     parameter: str
     expected: Optional[float] = None
-    observed: Optional[float] = None
+    actual: Optional[float] = None
+    actual_source: str = "NONE"  # "ESTIMATED", "OBSERVED", or "NONE"
     residual: float = 0.0
     relative_error: float = 0.0
-    quality: str = "VALID"  # VALID, MISSING, INVALID_NAN, INVALID_INF
-    warning_triggered: bool = False
-    threshold: Optional[float] = None
+    status: str = "GOOD"  # GOOD, WARNING, CRITICAL, MISSING, INVALID_NAN, INVALID_INF
+    warning_threshold: Optional[float] = None
+    critical_threshold: Optional[float] = None
     tolerance_type: str = "ABSOLUTE"
+    denominator_floor: float = 1e-3
     unit: str = ""
     timestamp: float = 0.0
 
@@ -32,86 +34,99 @@ class ParameterResidual:
         cls,
         parameter: str,
         expected: Optional[float],
-        observed: Optional[float],
-        threshold: Optional[float] = None,
+        actual: Optional[float],
+        actual_source: str = "NONE",
+        warning_threshold: Optional[float] = None,
+        critical_threshold: Optional[float] = None,
         tolerance_type: str = "ABSOLUTE",
+        denominator_floor: float = 1e-3,
         unit: str = "",
         timestamp: float = 0.0
     ) -> "ParameterResidual":
         """Safely computes ParameterResidual handling None, zero, NaN, Inf, and invalid units."""
-        if expected is None or observed is None:
+        if expected is None or actual is None:
             return cls(
                 parameter=parameter,
                 expected=expected,
-                observed=observed,
+                actual=actual,
+                actual_source=actual_source if actual is not None else "NONE",
                 residual=0.0,
                 relative_error=0.0,
-                quality="MISSING",
-                warning_triggered=False,
-                threshold=threshold,
+                status="MISSING",
+                warning_threshold=warning_threshold,
+                critical_threshold=critical_threshold,
                 tolerance_type=tolerance_type,
+                denominator_floor=denominator_floor,
                 unit=unit,
                 timestamp=timestamp
             )
 
-        if math.isnan(expected) or math.isnan(observed):
+        if math.isnan(expected) or math.isnan(actual):
             return cls(
                 parameter=parameter,
                 expected=expected if not math.isnan(expected) else None,
-                observed=observed if not math.isnan(observed) else None,
+                actual=actual if not math.isnan(actual) else None,
+                actual_source=actual_source if not math.isnan(actual) else "NONE",
                 residual=0.0,
                 relative_error=0.0,
-                quality="INVALID_NAN",
-                warning_triggered=False,
-                threshold=threshold,
+                status="INVALID_NAN",
+                warning_threshold=warning_threshold,
+                critical_threshold=critical_threshold,
                 tolerance_type=tolerance_type,
+                denominator_floor=denominator_floor,
                 unit=unit,
                 timestamp=timestamp
             )
 
-        if math.isinf(expected) or math.isinf(observed):
+        if math.isinf(expected) or math.isinf(actual):
             return cls(
                 parameter=parameter,
                 expected=expected if not math.isinf(expected) else None,
-                observed=observed if not math.isinf(observed) else None,
+                actual=actual if not math.isinf(actual) else None,
+                actual_source=actual_source if not math.isinf(actual) else "NONE",
                 residual=0.0,
                 relative_error=0.0,
-                quality="INVALID_INF",
-                warning_triggered=False,
-                threshold=threshold,
+                status="INVALID_INF",
+                warning_threshold=warning_threshold,
+                critical_threshold=critical_threshold,
                 tolerance_type=tolerance_type,
+                denominator_floor=denominator_floor,
                 unit=unit,
                 timestamp=timestamp
             )
 
         exp_val = float(expected)
-        obs_val = float(observed)
-        res = obs_val - exp_val
+        act_val = float(actual)
+        res = act_val - exp_val
 
-        if abs(exp_val) > 1e-9:
-            rel_err = res / abs(exp_val)
-        else:
-            rel_err = 0.0
+        denom = abs(exp_val)
+        if denom < denominator_floor:
+            denom = denominator_floor
 
-        warning = False
-        if threshold is not None:
-            if tolerance_type.upper() == "RELATIVE":
-                if abs(rel_err) > threshold:
-                    warning = True
-            else:
-                if abs(res) > threshold:
-                    warning = True
+        rel_err = res / denom
+
+        status = "GOOD"
+        
+        # Evaluate against thresholds
+        val_to_check = abs(rel_err) if tolerance_type.upper() == "RELATIVE" else abs(res)
+
+        if critical_threshold is not None and val_to_check > critical_threshold:
+            status = "CRITICAL"
+        elif warning_threshold is not None and val_to_check > warning_threshold:
+            status = "WARNING"
 
         return cls(
             parameter=parameter,
             expected=exp_val,
-            observed=obs_val,
+            actual=act_val,
+            actual_source=actual_source,
             residual=res,
             relative_error=rel_err,
-            quality="VALID",
-            warning_triggered=warning,
-            threshold=threshold,
+            status=status,
+            warning_threshold=warning_threshold,
+            critical_threshold=critical_threshold,
             tolerance_type=tolerance_type,
+            denominator_floor=denominator_floor,
             unit=unit,
             timestamp=timestamp
         )
@@ -121,12 +136,15 @@ class ParameterResidual:
         return {
             "parameter": self.parameter,
             "expected": round(self.expected, 4) if self.expected is not None else None,
-            "observed": round(self.observed, 4) if self.observed is not None else None,
+            "actual": round(self.actual, 4) if self.actual is not None else None,
+            "actual_source": self.actual_source,
             "residual": round(self.residual, 4),
             "relative_error": round(self.relative_error, 4),
-            "quality": self.quality,
-            "warning_triggered": self.warning_triggered,
-            "threshold": self.threshold,
+            "status": self.status,
+            "warning_threshold": self.warning_threshold,
+            "critical_threshold": self.critical_threshold,
+            "denominator_floor": self.denominator_floor,
+            "tolerance_type": self.tolerance_type,
             "unit": self.unit,
             "timestamp": self.timestamp
         }
@@ -164,14 +182,27 @@ class ResidualState:
 
     @property
     def warnings_count(self) -> int:
-        """Returns the number of residuals that triggered a warning."""
+        """Returns the number of residuals that triggered a WARNING."""
         count = 0
         for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
                           "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
                           "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
                           "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
             res = getattr(self, attr_name)
-            if res is not None and getattr(res, "warning_triggered", False):
+            if res is not None and res.status == "WARNING":
+                count += 1
+        return count
+
+    @property
+    def criticals_count(self) -> int:
+        """Returns the number of residuals that triggered a CRITICAL."""
+        count = 0
+        for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(self, attr_name)
+            if res is not None and res.status == "CRITICAL":
                 count += 1
         return count
 
@@ -191,5 +222,6 @@ class ResidualState:
             "sequence_number": self.sequence_number,
             "engine_id": self.engine_id,
             "residuals": residuals_dict,
-            "warnings_count": self.warnings_count
+            "warnings_count": self.warnings_count,
+            "criticals_count": self.criticals_count
         }

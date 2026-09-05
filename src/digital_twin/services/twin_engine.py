@@ -121,32 +121,38 @@ class DigitalTwinEngine:
             if observed.sequence_number is not None:
                 self.last_sequence[engine_index] = observed.sequence_number
                 
+            # Phase 2D State Estimation (UKF)
+            estimated_state = self.estimators[engine_index].estimate(expected, observed, dt)
+
             # 5. Calculate Residuals
-            residuals = self.residual_analyzer.analyze(expected, observed)
+            residuals = self.residual_analyzer.analyze(expected, observed, estimated_state)
     
             # 6. Perform Causal Deviation Analysis
             causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
             self.last_causal_analysis[engine_index] = causal_res
     
             # 7. Determine Twin Lifecycle Status based on Analysis & Sync Result
-            if sync_result.status == "DEGRADED_OBSERVATION" or residuals.warnings_count > 0:
-                if residuals.warnings_count > 0:
-                    status = DigitalTwinStatus.DEVIATION_DETECTED
-                    data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
-                    confidence = 0.85
-                else:
-                    status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
-                    data_quality = DigitalTwinDataQuality.DEGRADED
-                    confidence = 0.7
+            warnings = []
+            
+            # Confidence logic based on residual counts
+            if residuals.criticals_count > 0:
+                status = DigitalTwinStatus.DEVIATION_DETECTED
+                data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
+                confidence = 0.3
                 warnings = self._generate_warning_events(residuals, causal_res, engine_index)
+            elif residuals.warnings_count > 0:
+                status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
+                data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
+                confidence = 0.85
+                warnings = self._generate_warning_events(residuals, causal_res, engine_index)
+            elif sync_result.status == "DEGRADED_OBSERVATION":
+                status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
+                data_quality = DigitalTwinDataQuality.DEGRADED
+                confidence = 0.7
             else:
                 status = DigitalTwinStatus.SYNCHRONIZED
                 data_quality = DigitalTwinDataQuality.GOOD
-                confidence = 1.0
-                warnings = []
-                
-            # Phase 2D State Estimation (UKF)
-            estimated_state = self.estimators[engine_index].estimate(expected, observed, dt)
+                confidence = estimated_state.estimation_confidence if hasattr(estimated_state, 'estimation_confidence') else 1.0
 
         # 8. Package Master Digital Twin State
         state = DigitalTwinState(
@@ -182,7 +188,7 @@ class DigitalTwinEngine:
                       "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
                       "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
             res = getattr(residuals, param)
-            if res and res.warning_triggered:
+            if res and res.status in ("WARNING", "CRITICAL"):
                 warning_events.append({
                     "engine_index": engine_index,
                     "parameter": param.upper(),
@@ -238,7 +244,7 @@ class DigitalTwinEngine:
             "engine_id": state.engine_id,
             "status": state.status,
             "data_quality": state.data_quality,
-            "residuals_count": state.residual_state.warnings_count
+            "residuals_count": state.residual_state.warnings_count + state.residual_state.criticals_count
         })
         if len(self.history_records) > 500:
             self.history_records.pop(0)
