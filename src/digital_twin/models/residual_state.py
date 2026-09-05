@@ -4,8 +4,8 @@ SIH26054 — Module 03 Digital Twin Core.
 """
 
 import math
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -135,26 +135,61 @@ class ParameterResidual:
 @dataclass
 class ResidualState:
     """
-    Container storing ParameterResidual entries across all evaluated engine/aircraft parameters.
+    Explicit schema for all evaluated engine/aircraft parameter residuals.
     """
     timestamp: float = 0.0
     sequence_number: int = 0
     engine_id: str = "engine_1"
-    residuals: Dict[str, ParameterResidual] = field(default_factory=dict)
-    warnings_count: int = 0
+    
+    # Explicit 18 Category C Parameters
+    rpm: Optional[ParameterResidual] = None
+    map_bar: Optional[ParameterResidual] = None
+    turbo_rpm: Optional[ParameterResidual] = None
+    airflow_kg_h: Optional[ParameterResidual] = None
+    fuel_flow_kg_h: Optional[ParameterResidual] = None
+    afr: Optional[ParameterResidual] = None
+    combustion_energy: Optional[ParameterResidual] = None
+    combustion_efficiency: Optional[ParameterResidual] = None
+    indicated_power_kw: Optional[ParameterResidual] = None
+    torque_n_m: Optional[ParameterResidual] = None
+    egt_c: Optional[ParameterResidual] = None
+    cht_c: Optional[ParameterResidual] = None
+    coolant_temp_c: Optional[ParameterResidual] = None
+    oil_temp_c: Optional[ParameterResidual] = None
+    oil_pressure_bar: Optional[ParameterResidual] = None
+    turbo_boost_bar: Optional[ParameterResidual] = None
+    gearbox_rpm: Optional[ParameterResidual] = None
+    propeller_load_nm: Optional[ParameterResidual] = None
+    thrust_n: Optional[ParameterResidual] = None
 
-    def add_residual(self, res: ParameterResidual) -> None:
-        """Adds or updates a ParameterResidual entry."""
-        self.residuals[res.parameter] = res
-        if res.warning_triggered:
-            self.warnings_count += 1
+    @property
+    def warnings_count(self) -> int:
+        """Returns the number of residuals that triggered a warning."""
+        count = 0
+        for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(self, attr_name)
+            if res is not None and getattr(res, "warning_triggered", False):
+                count += 1
+        return count
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes ResidualState to dictionary."""
+        residuals_dict = {}
+        for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(self, attr_name)
+            if res is not None:
+                residuals_dict[attr_name] = res.to_dict()
+
         return {
             "timestamp": self.timestamp,
             "sequence_number": self.sequence_number,
             "engine_id": self.engine_id,
-            "residuals": {k: v.to_dict() for k, v in self.residuals.items()},
-            "warnings_count": sum(1 for v in self.residuals.values() if v.warning_triggered)
+            "residuals": residuals_dict,
+            "warnings_count": self.warnings_count
         }

@@ -86,3 +86,12 @@ Backend and APIs were tested locally using a custom `test_transients.py` automat
 --------------------------------------------------
 - Advanced structural wear (e.g., bearing degradation) is stubbed in the dashboard but not fully integrated into the Twin causal analysis DAG.
 - Residual thresholds are static in YAML. Dynamic thresholds based on flight envelope could be added in future versions.
+
+7. PHASE 2A UPDATE: DIGITAL TWIN DATA CONTRACTS
+--------------------------------------------------
+Date/Time: 2026-09-05
+- Dict-based legacy states (`twin_internal_state.py`, `expected_state.py`) completely removed.
+- Implemented strictly separated dataclasses: `DigitalTwinState`, `OperatingContext`, `HealthState`, `ObservedState`, `HealthyExpectedState`, `EstimatedActualState`, and `ResidualState`.
+- Implemented robust `ParameterResidual` metrics with NaN/Inf protections.
+- Disentangled telemetry ingestion from the dataclass schema to ensure clear boundary between Module 02 and Module 03.
+- Added comprehensive unit tests in `tests/test_digital_twin_contracts.py`.

@@ -7,19 +7,19 @@ from typing import Any, Dict, List, Optional
 
 from src.digital_twin.analysis.causal_analyzer import CausalAnalyzer
 from src.digital_twin.analysis.residual_analyzer import ResidualAnalyzer
-from src.digital_twin.models.expected_state import ExpectedState
+from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ResidualState
-from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStatus
+from src.digital_twin.models.twin_state import DigitalTwinState, DigitalTwinStatus, DigitalTwinDataQuality
 from src.digital_twin.physics.expected_behavior import ExpectedBehaviorModel
 
 
 class DigitalTwinEngine:
     """
-    Main orchestrator service for Digital Twin Phase 1:
-    Ingests Module 02 validated telemetry, extracts ExpectedState from Module 01 physics,
-    computes ParameterResiduals, evaluates Causal Deviation Graph, updates Twin Status,
-    and generates backend warning events.
+    Main orchestrator service for Digital Twin Phase 2A:
+    Aligns HealthyExpectedState (from Module 01) and ObservedState (from telemetry),
+    computes ParameterResiduals, evaluates Causal Deviation Graph, and updates Twin Status.
+    NOTE: Telemetry ingestion is deliberately excluded from Phase 2A.
     """
 
     def __init__(self, config_path: str = "configs/digital_twin_config.yaml") -> None:
@@ -35,9 +35,7 @@ class DigitalTwinEngine:
     def process_step(
         self,
         sim_state: Any,
-        pipeline: Optional[Any] = None,
-        telemetry_frame: Optional[Any] = None,
-        normalized_records: Optional[List[Any]] = None,
+        observed_state: Optional[ObservedState] = None,
         engine_index: int = 1,
         timestamp: float = 0.0,
         sequence_number: int = 0,
@@ -46,7 +44,6 @@ class DigitalTwinEngine:
     ) -> DigitalTwinState:
         """
         Executes a single Digital Twin evaluation step for engine_index.
-        Aligns ExpectedState (from Module 01) and ObservedState (from Module 02 validated telemetry).
         """
         ctx = operating_context if operating_context is not None else {}
 
@@ -59,16 +56,16 @@ class DigitalTwinEngine:
             propeller_state=propeller_state
         )
 
-        # 2. Derive Observed State from Module 02 validated telemetry pipeline
-        observed = self._derive_observed_state(
-            pipeline=pipeline,
-            telemetry_frame=telemetry_frame,
-            normalized_records=normalized_records,
-            engine_index=engine_index,
-            timestamp=timestamp,
-            sequence_number=sequence_number,
-            propeller_state=propeller_state
-        )
+        # 2. Use provided Observed State (Telemetry ingestion is external in Phase 2A)
+        if observed_state is None:
+             observed = ObservedState(
+                timestamp=timestamp, 
+                sequence_number=sequence_number, 
+                engine_id=f"engine_{engine_index}", 
+                data_quality="INSUFFICIENT_DATA"
+             )
+        else:
+             observed = observed_state
 
         # 3. Calculate Residuals
         residuals = self.residual_analyzer.analyze(expected, observed)
@@ -101,41 +98,20 @@ class DigitalTwinEngine:
         # 7. Package Master Digital Twin State
         state = DigitalTwinState(
             timestamp=timestamp,
-            simulation_time=timestamp,
             engine_id=f"engine_{engine_index}",
             aircraft_id="rotax_914_uav",
             observed_state=observed,
-            expected_state=expected,
+            healthy_expected_state=expected,
             residual_state=residuals,
-            operating_context=ctx,
-            data_quality=observed.data_quality,
+            data_quality=DigitalTwinDataQuality.GOOD,
             confidence=confidence,
             status=status,
             warnings=warnings,
-            causal_chain_status=causal_res
         )
 
         self.twin_states[engine_index] = state
         self._record_twin_observation(state)
         return state
-
-    def _derive_observed_state(
-        self,
-        pipeline: Optional[Any],
-        telemetry_frame: Optional[Any],
-        normalized_records: Optional[List[Any]],
-        engine_index: int,
-        timestamp: float,
-        sequence_number: int,
-        propeller_state: Optional[Any]
-    ) -> ObservedState:
-        """Extracts validated/normalized telemetry observations strictly from Module 02."""
-        return ObservedState.from_module02_pipeline(
-            pipeline=pipeline,
-            engine_index=engine_index,
-            target_timestamp=timestamp,
-            target_sequence=sequence_number
-        )
 
     def _generate_warning_events(
         self,
@@ -145,8 +121,12 @@ class DigitalTwinEngine:
     ) -> List[Dict[str, Any]]:
         """Formulates backend Digital Twin warning event dictionaries."""
         warning_events: List[Dict[str, Any]] = []
-        for param, res in residuals.residuals.items():
-            if res.warning_triggered:
+        for param in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                      "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                      "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                      "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(residuals, param)
+            if res and res.warning_triggered:
                 warning_events.append({
                     "engine_index": engine_index,
                     "parameter": param.upper(),
@@ -173,7 +153,7 @@ class DigitalTwinEngine:
         return {
             "engine_id": st.engine_id,
             "status": st.status.value if hasattr(st.status, "value") else str(st.status),
-            "data_quality": st.data_quality,
+            "data_quality": str(st.data_quality),
             "confidence": st.confidence,
             "timestamp": st.timestamp,
             "warnings_count": len(st.warnings)
@@ -187,7 +167,8 @@ class DigitalTwinEngine:
     def get_causal_analysis(self, engine_index: int = 1) -> Dict[str, Any]:
         """Retrieves physical causal chain graph status for engine_index."""
         st = self.twin_states.get(engine_index)
-        return st.causal_chain_status if st else {}
+        # Not fully implemented in 2A, return empty dict for now.
+        return {}
 
     def get_warnings(self) -> List[Dict[str, Any]]:
         """Retrieves active backend warning events across all engines."""

@@ -5,12 +5,12 @@ SIH26054 — Module 03 Digital Twin Core.
 
 from typing import Any, Dict, Optional
 
-from src.digital_twin.models.expected_state import ExpectedState
+from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 
 
 class ExpectedBehaviorModel:
     """
-    Adapter and interface layer extracting ExpectedState parameters directly from Module 01 physics state.
+    Adapter and interface layer extracting HealthyExpectedState parameters directly from Module 01 physics state.
     MANDATE: Does NOT duplicate or re-implement independent physics equations. Reuses authoritative Rotax 914 physics.
     Supports complete 18 internal Category C parameters. Disambiguates combustion_energy, heat_release_rate_w, and combustion_efficiency.
     """
@@ -23,12 +23,12 @@ class ExpectedBehaviorModel:
         timestamp: float = 0.0,
         sequence_number: int = 0,
         propeller_state: Optional[Any] = None
-    ) -> ExpectedState:
+    ) -> HealthyExpectedState:
         """
-        Maps current Module 01 SimulationState attributes for engine_index into a clean ExpectedState dataclass.
+        Maps current Module 01 SimulationState attributes for engine_index into a clean HealthyExpectedState dataclass.
         """
         if sim_state is None:
-            return ExpectedState(
+            return HealthyExpectedState(
                 timestamp=timestamp,
                 sequence_number=sequence_number,
                 engine_id=f"engine_{engine_index}",
@@ -100,7 +100,7 @@ class ExpectedBehaviorModel:
         if prop_load_val == 0.0 and torque_val > 0.0:
             prop_load_val = torque_val / gear_ratio if gear_ratio else torque_val
 
-        return ExpectedState(
+        return HealthyExpectedState(
             timestamp=timestamp,
             sequence_number=sequence_number,
             engine_id=f"engine_{engine_index}",

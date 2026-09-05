@@ -6,7 +6,7 @@ SIH26054 — Module 03 Digital Twin Core.
 from typing import Dict, Any, Type
 import logging
 
-from src.digital_twin.models.twin_internal_state import TwinInternalState
+from src.digital_twin.models.estimated_actual_state import EstimatedActualState
 from src.digital_twin.models.observed_state import ObservedState
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class BaseEstimator:
     Takes a predicted internal state and incoming telemetry (ObservedState),
     and produces a corrected internal state.
     """
-    def synchronize(self, predicted: TwinInternalState, observed: ObservedState) -> TwinInternalState:
+    def synchronize(self, predicted: EstimatedActualState, observed: ObservedState) -> EstimatedActualState:
         raise NotImplementedError
 
 
@@ -41,8 +41,8 @@ class AlphaFilterEstimator(BaseEstimator):
             "oil_temp_c": "oil_temp_c",
         }
 
-    def synchronize(self, predicted: TwinInternalState, observed: ObservedState) -> TwinInternalState:
-        corrected = TwinInternalState(timestamp=predicted.timestamp)
+    def synchronize(self, predicted: EstimatedActualState, observed: ObservedState) -> EstimatedActualState:
+        corrected = EstimatedActualState(timestamp=predicted.timestamp)
         
         # Handle invalid telemetry: fallback to pure prediction
         if observed.data_quality in ["INSUFFICIENT_DATA", "INVALID"]:

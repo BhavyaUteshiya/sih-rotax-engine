@@ -5,16 +5,17 @@ SIH26054 — Module 03 Digital Twin Core.
 
 import os
 from typing import Any, Dict, Optional
+
 import yaml
 
-from src.digital_twin.models.expected_state import ExpectedState
+from src.digital_twin.models.healthy_expected_state import HealthyExpectedState
 from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.residual_state import ParameterResidual, ResidualState
 
 
 class ResidualAnalyzer:
     """
-    Evaluates parameter-by-parameter residuals between ObservedState and ExpectedState.
+    Evaluates parameter-by-parameter residuals between ObservedState and HealthyExpectedState.
     Thresholds are strictly configuration-driven loaded from configs/digital_twin_config.yaml.
     Evaluates EXACTLY the 18 authoritative Category C internal parameters:
     rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, combustion_energy,
@@ -126,7 +127,7 @@ class ResidualAnalyzer:
         except Exception:
             return limits
 
-    def analyze(self, expected: ExpectedState, observed: ObservedState) -> ResidualState:
+    def analyze(self, expected: HealthyExpectedState, observed: ObservedState) -> ResidualState:
         """
         Computes ParameterResidual objects for all 18 authoritative internal parameters and aggregates into ResidualState.
         Applies a parameter-specific debounce filter to suppress instantaneous transient warnings.
