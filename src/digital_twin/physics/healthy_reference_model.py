@@ -44,7 +44,13 @@ class HealthyReferenceModel:
             throttle_position=context.throttle_position,
             airspeed_m_s=context.airspeed_m_s,
             fuel_pressure_pa=context.fuel_pressure_pa,
-            fuel_pressure_delta_pa=25000.0, # Nominal delta
+            
+            # NOTE: 25000.0 Pa is a nominal engineering/calibration assumption for the 
+            # fuel pressure delta. It is NOT presented as an official Rotax specification.
+            # This is a nominal calibration/demo input and future calibration/configuration 
+            # may replace it with an authoritative source.
+            fuel_pressure_delta_pa=25000.0, 
+            
             starter_engaged=context.starter_engaged
         )
 

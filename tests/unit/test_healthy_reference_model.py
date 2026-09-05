@@ -63,3 +63,27 @@ def test_healthy_reference_model_no_fabricated_values():
     assert state.coolant_temp_c is None
     assert state.oil_pressure_bar is None
     assert state.combustion_energy is None
+
+def test_healthy_reference_model_authoritative_gearbox():
+    model = HealthyReferenceModel(engine_index=1)
+    context = OperatingContext(
+        throttle_position=0.5
+    )
+    
+    # 1. Step the model
+    state = model.step(context, dt=0.1)
+    
+    # 2. Get authoritative Phase 1 state
+    sim_state = model.simulator.get_state()
+    
+    # 3. Assert they are exactly equal, no fallback division
+    assert state.gearbox_rpm == sim_state.engine_dynamics.propeller_rpm
+    
+    # 4. Verify fuel pressure delta explicitly remains a nominal calibration assumption
+    # We verify the source file directly contains the required disclaimer.
+    import inspect
+    import src.digital_twin.physics.healthy_reference_model as hrm
+    source_lines = inspect.getsource(hrm)
+    assert "nominal engineering/calibration assumption" in source_lines
+    assert "NOT presented as an official Rotax specification" in source_lines
+    assert "fuel_pressure_delta_pa=25000.0" in source_lines

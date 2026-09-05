@@ -50,7 +50,7 @@ class ExpectedBehaviorModel:
         # Engine Dynamics & Basic params
         rpm_val = getattr(engine_dyn, "engine_rpm", None)
         torque_val = getattr(engine_dyn, "indicated_torque_nm", None)
-        gearbox_val = (rpm_val / 2.4286) if rpm_val is not None else None
+        gearbox_val = getattr(engine_dyn, "propeller_rpm", None)
 
         # Turbo & Airflow
         map_pa = getattr(turbo, "manifold_pressure_pa", None)
