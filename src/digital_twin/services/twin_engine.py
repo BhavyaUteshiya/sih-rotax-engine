@@ -40,7 +40,7 @@ class DigitalTwinEngine:
         }
         self.synchronizer = StateSynchronizer()
         self.last_sequence: Dict[int, int] = {1: -1, 2: -1}
-        self.history_records: List[Dict[str, Any]] = []
+        self.history_records: Dict[int, List[Dict[str, Any]]] = {1: [], 2: []}
         self.active_warnings: List[Dict[str, Any]] = []
         self.last_causal_analysis: Dict[int, Dict[str, Any]] = {1: {}, 2: {}}
         
@@ -252,7 +252,7 @@ class DigitalTwinEngine:
         )
 
         self.twin_states[engine_index] = state
-        self._record_twin_observation(state)
+        self._record_twin_observation(engine_index, state)
         return state
 
     def _generate_warning_events(
@@ -318,14 +318,17 @@ class DigitalTwinEngine:
             warns.extend(st.warnings)
         return warns
 
-    def _record_twin_observation(self, state: DigitalTwinState) -> None:
+    def _record_twin_observation(self, engine_index: int, state: DigitalTwinState) -> None:
         """Appends state observation to rolling history log."""
-        self.history_records.append({
+        if engine_index not in self.history_records:
+            self.history_records[engine_index] = []
+            
+        self.history_records[engine_index].append({
             "timestamp": state.timestamp,
             "engine_id": state.engine_id,
             "status": state.status,
             "data_quality": state.data_quality,
             "residuals_count": state.residual_state.warnings_count + state.residual_state.criticals_count
         })
-        if len(self.history_records) > 500:
-            self.history_records.pop(0)
+        if len(self.history_records[engine_index]) > 500:
+            self.history_records[engine_index].pop(0)
