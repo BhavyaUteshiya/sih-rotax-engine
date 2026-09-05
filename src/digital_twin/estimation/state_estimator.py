@@ -56,27 +56,36 @@ class StateEstimator:
         self.R = np.diag(cfg.get("R", [1.0] * 8))
         self.P0 = np.diag(cfg.get("P0", [1.0] * 8))
 
-    def _state_to_array(self, state: Any) -> np.ndarray:
-        """Extracts the 8-dim state vector from a state object (Expected or Observed)."""
+    def _state_to_array(self, expected: HealthyExpectedState, observed: ObservedState) -> np.ndarray:
+        """Extracts the 8-dim state vector from a state object, throwing error if data is missing."""
         arr = np.zeros(8)
         for i, key in enumerate(self.STATE_KEYS):
-            val = getattr(state, key, None)
-            arr[i] = val if val is not None else np.nan
+            val = getattr(observed, key, None)
+            if val is None or np.isnan(val) or np.isinf(val):
+                val = getattr(expected, key, None)
+            
+            if val is None or np.isnan(val) or np.isinf(val):
+                arr[i] = np.nan
+            else:
+                arr[i] = val
         return arr
 
-    def _initialize_filter(self, expected: HealthyExpectedState, observed: ObservedState, dt: float):
+    def _initialize_filter(self, expected: HealthyExpectedState, observed: ObservedState, dt: float) -> bool:
         """
         Initializes the UKF using the best available combination of expected and observed data.
-        Missing observed data falls back to healthy expected data.
+        Returns True if successful, False if insufficient data.
         """
-        exp_arr = self._state_to_array(expected)
-        obs_arr = self._state_to_array(observed)
+        exp_arr = self._state_to_array(expected, expected) # Safe extraction
+        # For observed, we use expected as fallback for validation
+        obs_arr = self._state_to_array(expected, observed)
         
         # Initialize with observed if valid, otherwise expected
         x0 = np.where(np.isnan(obs_arr), exp_arr, obs_arr)
         
-        # If still NaN (meaning Phase 1 didn't produce it), fall back to 0.0 to prevent UKF failure
-        x0 = np.nan_to_num(x0, nan=0.0)
+        # Check if any required state is NaN
+        if np.isnan(x0).any():
+            return False
+
         
         self.ukf = UnscentedKalmanFilter(
             dim_x=8,
@@ -92,29 +101,37 @@ class StateEstimator:
         )
         self.ukf.x = x0
         self.last_expected_state = np.nan_to_num(exp_arr, nan=0.0)
+        return True
 
     def reset(self):
         """Forces a deterministic reset of the estimator."""
         self.ukf = None
         self.last_expected_state = None
 
-    def estimate(self, expected: HealthyExpectedState, observed: ObservedState, dt: float) -> EstimatedActualState:
+    def estimate(self, expected: HealthyExpectedState, observed: ObservedState, dt: float, predict_only: bool = False) -> EstimatedActualState:
         """
         Runs the prediction and measurement update for one timestep.
-        Must only be called if synchronization succeeded.
+        Must only be called if synchronization succeeded, unless predict_only=True.
         """
         if dt <= 0.0:
             dt = 0.1 # Minimum safe dt
             
         if self.ukf is None:
-            self._initialize_filter(expected, observed, dt)
+            success = self._initialize_filter(expected, observed, dt)
+            if not success:
+                # Cannot initialize, return pass-through with 0 confidence
+                return self._build_uninitialized_state(expected)
         
         self.ukf.dt = dt
         
         # 1. Prediction (Process Model)
-        # We model the actual state transition as tracking the healthy state transition.
+        # Explicit classification: healthy-reference-driven reduced-order process model
+        # It propagates deviation around the healthy reference trajectory.
+        # It does not reproduce the full nonlinear simulator inside UKF sigma points,
+        # which is intentional to avoid duplicating Phase 1 physics.
         # x_k|k-1 = x_k-1|k-1 + (exp_k - exp_k-1)
-        curr_exp_arr = np.nan_to_num(self._state_to_array(expected), nan=0.0)
+        # For prediction, we just extract the expected state values (so we pass expected as both to avoid throwing on observed)
+        curr_exp_arr = np.nan_to_num(self._state_to_array(expected, expected), nan=0.0)
         delta_exp = curr_exp_arr - self.last_expected_state
         
         def process_model(x: np.ndarray, dt_step: float) -> np.ndarray:
@@ -124,16 +141,18 @@ class StateEstimator:
         self.last_expected_state = curr_exp_arr
         
         # 2. Measurement Update (Measurement Model)
-        obs_arr = self._state_to_array(observed)
+        obs_arr = self._state_to_array(expected, observed)
         
-        # Filter available channels
         valid_indices = []
         valid_measurements = []
-        for i in range(8):
-            if not np.isnan(obs_arr[i]):
-                valid_indices.append(i)
-                valid_measurements.append(obs_arr[i])
-                
+        
+        if not predict_only:
+            # Filter available channels
+            for i in range(8):
+                if not np.isnan(obs_arr[i]):
+                    valid_indices.append(i)
+                    valid_measurements.append(obs_arr[i])
+                    
         if valid_measurements:
             z = np.array(valid_measurements)
             mapping = np.array(valid_indices)
@@ -144,7 +163,43 @@ class StateEstimator:
             self.ukf.update(z, measurement_mapping=mapping, R_active=R_active)
             
         # 3. Populate EstimatedActualState
-        return self._build_estimated_state(expected, self.ukf.x, self.ukf.P)
+        est = self._build_estimated_state(expected, self.ukf.x, self.ukf.P)
+        if predict_only:
+            est.is_prediction_only = True
+            est.estimation_confidence = 0.0
+        return est
+
+    def _build_uninitialized_state(self, expected: HealthyExpectedState) -> EstimatedActualState:
+        """Builds a pass-through state when UKF cannot be initialized."""
+        est = EstimatedActualState(
+            timestamp=expected.timestamp,
+            sequence_number=expected.sequence_number,
+            engine_id=expected.engine_id,
+            aircraft_id=expected.aircraft_id,
+            estimation_confidence=0.0,
+            is_prediction_only=True
+        )
+        # All available fields from expected are passed through
+        for key in self.STATE_KEYS:
+            val = getattr(expected, key, None)
+            if val is not None:
+                setattr(est, key, val)
+                
+        # Pass remaining 11 fields
+        self._populate_passthrough_fields(expected, est)
+        return est
+
+    def _populate_passthrough_fields(self, expected: HealthyExpectedState, est: EstimatedActualState):
+        if expected.combustion_energy is not None: est.combustion_energy = expected.combustion_energy
+        if expected.combustion_efficiency is not None: est.combustion_efficiency = expected.combustion_efficiency
+        if expected.indicated_power_kw is not None: est.indicated_power_kw = expected.indicated_power_kw
+        if expected.torque_n_m is not None: est.torque_n_m = expected.torque_n_m
+        if expected.coolant_temp_c is not None: est.coolant_temp_c = expected.coolant_temp_c
+        if expected.oil_pressure_bar is not None: est.oil_pressure_bar = expected.oil_pressure_bar
+        if expected.turbo_boost_bar is not None: est.turbo_boost_bar = expected.turbo_boost_bar
+        if expected.gearbox_rpm is not None: est.gearbox_rpm = expected.gearbox_rpm
+        if expected.propeller_load_nm is not None: est.propeller_load_nm = expected.propeller_load_nm
+        if expected.thrust_n is not None: est.thrust_n = expected.thrust_n
 
     def _build_estimated_state(self, expected: HealthyExpectedState, x: np.ndarray, P: np.ndarray) -> EstimatedActualState:
         """
@@ -166,19 +221,6 @@ class StateEstimator:
         # Extract diagonal elements as variance for uncertainty representation
         est.covariance = P.tolist()
         
-        # The remaining 11 parameters are not part of the UKF state vector.
-        # As they are unmeasured and unestimated, we pass through the healthy expected value
-        # or defaults (to maintain structural integrity).
-        # We do this carefully:
-        if expected.combustion_energy is not None: est.combustion_energy = expected.combustion_energy
-        if expected.combustion_efficiency is not None: est.combustion_efficiency = expected.combustion_efficiency
-        if expected.indicated_power_kw is not None: est.indicated_power_kw = expected.indicated_power_kw
-        if expected.torque_n_m is not None: est.torque_n_m = expected.torque_n_m
-        if expected.coolant_temp_c is not None: est.coolant_temp_c = expected.coolant_temp_c
-        if expected.oil_pressure_bar is not None: est.oil_pressure_bar = expected.oil_pressure_bar
-        if expected.turbo_boost_bar is not None: est.turbo_boost_bar = expected.turbo_boost_bar
-        if expected.gearbox_rpm is not None: est.gearbox_rpm = expected.gearbox_rpm
-        if expected.propeller_load_nm is not None: est.propeller_load_nm = expected.propeller_load_nm
-        if expected.thrust_n is not None: est.thrust_n = expected.thrust_n
+        self._populate_passthrough_fields(expected, est)
         
         return est

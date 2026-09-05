@@ -53,6 +53,12 @@ class UnscentedKalmanFilter:
         # Enforce symmetry
         P = (P + P.T) / 2.0
         
+        # Check for NaN/Inf in state and covariance
+        if not np.isfinite(x).all():
+            raise ValueError("State vector contains NaN/Inf values.")
+        if not np.isfinite(P).all():
+            raise ValueError("Covariance matrix contains NaN/Inf values.")
+            
         try:
             L = np.linalg.cholesky(self.c * P)
         except np.linalg.LinAlgError:
@@ -124,12 +130,13 @@ class UnscentedKalmanFilter:
             Pxz += self.Wc[i] * np.outer(dx, dz)
             
         # Kalman Gain
+        # We use a linear solve instead of explicit inversion for numerical stability: K @ Pz = Pxz  => K = Pxz @ inv(Pz) => solve(Pz.T, Pxz.T).T
         try:
-            K = np.dot(Pxz, np.linalg.inv(Pz))
+            K = np.linalg.solve(Pz.T, Pxz.T).T
         except np.linalg.LinAlgError:
             # Singular measurement covariance, add numerical tolerance
             Pz_safe = Pz + np.eye(len(z)) * self.numerical_tolerance
-            K = np.dot(Pxz, np.linalg.inv(Pz_safe))
+            K = np.linalg.solve(Pz_safe.T, Pxz.T).T
             
         # Innovation
         y = z - zp
@@ -140,3 +147,9 @@ class UnscentedKalmanFilter:
         
         # Enforce symmetry
         self.P = (self.P + self.P.T) / 2.0
+        
+        # Verify PSD (Eigenvalue clipping)
+        eigenvalues, eigenvectors = np.linalg.eigh(self.P)
+        if (eigenvalues < 0).any():
+            eigenvalues = np.maximum(eigenvalues, self.numerical_tolerance)
+            self.P = eigenvectors @ np.diag(eigenvalues) @ eigenvectors.T

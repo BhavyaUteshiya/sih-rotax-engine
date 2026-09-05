@@ -13,6 +13,11 @@ class EstimatedActualState:
     Represents the twin's best estimate of the actual engine state.
     This is independently estimated and incorporates degradation, faults, and estimators,
     distinguishing it strictly from the HealthyExpectedState.
+    
+    NOTE: Only the 8 UKF state vector parameters are actively estimated:
+    [rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, cht_c, oil_temp_c].
+    The remaining 11 parameters are NOT estimated by the UKF; they are simply 
+    pass-through values from the HealthyExpectedState (and remain healthy-reference values).
     """
     timestamp: float = 0.0
     sequence_number: int = 0
@@ -41,6 +46,7 @@ class EstimatedActualState:
     thrust_n: float = 0.0
 
     estimation_confidence: float = 1.0
+    is_prediction_only: bool = False
     covariance: Optional[List[List[float]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -70,5 +76,6 @@ class EstimatedActualState:
             "propeller_load_nm": round(self.propeller_load_nm, 2),
             "thrust_n": round(self.thrust_n, 2),
             "estimation_confidence": self.estimation_confidence,
+            "is_prediction_only": self.is_prediction_only,
             "covariance": self.covariance,
         }
