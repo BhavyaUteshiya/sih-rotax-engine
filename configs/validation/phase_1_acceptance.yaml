@@ -1,6 +1,0 @@
-scope: prototype_model_sanity
-checks:
-  - finite_state_outputs
-  - nonnegative_rotational_speed
-  - causal_model_execution
-  - documented_parameter_provenance

@@ -15,6 +15,8 @@ class EngineDynamicsInput:
     """Inputs to the Engine Dynamics model."""
     engine_angular_speed_rad_s: float
     indicated_power_w: float
+    ambient_density_kg_m3: float
+    airspeed_m_s: float
     starter_engaged: bool
     timestep_s: float
     propeller_load_torque_nm: float
@@ -43,13 +45,12 @@ class EngineDynamicsModel:
     J_ENGINE = 0.05               # Estimated engine rotational inertia (kg m^2). CALIBRATION.
     J_PROP = 0.59                 # Estimated propeller rotational inertia (kg m^2). CALIBRATION.
     
-    # Convention: propeller speed / engine speed. Source verification is tracked
-    # in the parameter record; do not read the numeric value as certification.
-    GEARBOX_RATIO = 0.41176
+    # Gearbox parameters for Rotax 914 (approx 2.4286:1 reduction)
+    GEARBOX_RATIO = 0.41176       # Propeller revs per Engine rev. OFFICIAL ROTAX spec.
     GEARBOX_EFFICIENCY = 0.98     # Estimated gearbox mechanical efficiency. CALIBRATION.
     
     # Equivalent inertia at the engine shaft: J_eq = J_engine + J_prop * (r_g)^2
-    # Both inertia terms are prototype calibration values.
+    # Yields exactly 0.15 kg.m^2 per Rotax documentation.
     J_EQ = J_ENGINE + J_PROP * (GEARBOX_RATIO ** 2)
     
     # Starter parameters

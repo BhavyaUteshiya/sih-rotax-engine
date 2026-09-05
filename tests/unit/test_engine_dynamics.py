@@ -15,6 +15,8 @@ class TestEngineDynamicsModel(unittest.TestCase):
         self.nominal_input = EngineDynamicsInput(
             engine_angular_speed_rad_s=607.37,
             indicated_power_w=85800.0,  # ~115 hp for rated testing
+            ambient_density_kg_m3=1.225,
+            airspeed_m_s=40.0,
             starter_engaged=False,
             timestep_s=0.01,
             propeller_load_torque_nm=0.0
@@ -216,6 +218,8 @@ class TestEngineDynamicsModel(unittest.TestCase):
         ed_in = EngineDynamicsInput(
             engine_angular_speed_rad_s=5000.0 * 2*math.pi/60.0,
             indicated_power_w=cb_out.indicated_power_w,
+            ambient_density_kg_m3=atm_out.density_kg_m3,
+            airspeed_m_s=40.0,
             starter_engaged=False,
             timestep_s=dt,
             propeller_load_torque_nm=0.0

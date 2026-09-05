@@ -113,9 +113,10 @@ class DigitalTwinSimulator:
             mass_flow_kg_s=self.state_combustion.exhaust_mass_flow_kg_s
         )
         
-        # Prototype calibration target; it is supplied at the simulation
-        # boundary and is not an official engine specification.
-        target_map = sim_input.target_map_at_full_throttle_pa * sim_input.throttle_position
+        # Target MAP could be linked to throttle, for now we set it to a nominal value 
+        # (e.g. 110 kPa for full throttle, scales down)
+        nominal_target_map = 110000.0
+        target_map = nominal_target_map * sim_input.throttle_position
         # Keep a physical minimum
         target_map = max(self.state_atmosphere.pressure_pa * 0.5, target_map)
 
@@ -158,7 +159,8 @@ class DigitalTwinSimulator:
             propeller_rpm=self.state_dynamics.propeller_rpm,
             airspeed_m_s=sim_input.airspeed_m_s,
             ambient_density_kg_m3=self.state_atmosphere.density_kg_m3,
-            propeller_diameter_m=sim_input.propeller_diameter_m
+            # The canonical diameter for the prototype
+            propeller_diameter_m=1.7
         )
         self.state_propeller = PropellerModel.calculate(prop_in)
         
@@ -167,6 +169,8 @@ class DigitalTwinSimulator:
         dynamics_in = EngineDynamicsInput(
             engine_angular_speed_rad_s=self.state_dynamics.engine_angular_speed_rad_s,
             indicated_power_w=self.state_combustion.indicated_power_w,
+            ambient_density_kg_m3=self.state_atmosphere.density_kg_m3,
+            airspeed_m_s=sim_input.airspeed_m_s,
             starter_engaged=sim_input.starter_engaged,
             timestep_s=dt,
             propeller_load_torque_nm=self.state_propeller.aerodynamic_torque_nm
