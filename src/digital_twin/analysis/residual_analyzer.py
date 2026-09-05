@@ -141,7 +141,11 @@ class ResidualAnalyzer:
         computed_residuals = {}
 
         def get_actual(name: str) -> tuple[Optional[float], str]:
-            if estimated is not None:
+            ukf_keys = {
+                "rpm", "map_bar", "turbo_rpm", "airflow_kg_h", 
+                "fuel_flow_kg_h", "afr", "cht_c", "oil_temp_c"
+            }
+            if estimated is not None and not estimated.is_prediction_only and name in ukf_keys:
                 val = getattr(estimated, name, None)
                 if val is not None and not math.isnan(val):
                     return val, "ESTIMATED"

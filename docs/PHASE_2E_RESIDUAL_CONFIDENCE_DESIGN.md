@@ -22,9 +22,15 @@ The pipeline executes in the following sequence:
 Residuals are defined as:
 `Residual = Actual - Expected`
 
-Where `Actual` is strictly prioritized as:
-1. `EstimatedActualState` (if available and not prediction-only).
-2. `ObservedState` (fallback if estimation is bypassed/unavailable).
+Where `Actual` is strictly prioritized based on parameter type:
+1. **UKF-Estimated Fields (8 parameters)**: `[rpm, map_bar, turbo_rpm, airflow_kg_h, fuel_flow_kg_h, afr, cht_c, oil_temp_c]`
+   - Uses `EstimatedActualState` if available and NOT prediction-only.
+   - Fallback to `ObservedState`.
+2. **Pass-Through Fields (11 parameters)**: (e.g. `oil_pressure_bar`, `thrust_n`)
+   - Explicitly NEVER use `EstimatedActualState` since the UKF does not estimate them (they are healthy-reference pass-throughs).
+   - Strictly uses `ObservedState`.
+
+If an actual source is unavailable (or prediction-only for UKF), the actual value is set to `None` with source `NONE`, resulting in a `MISSING` status. It does NOT fabricate zero.
 
 ### Thresholds & Configuration
 Each of the 19 standard parameters defines specific tolerances in `configs/digital_twin_config.yaml`:
@@ -35,12 +41,28 @@ Each of the 19 standard parameters defines specific tolerances in `configs/digit
 Relative Error Calculation:
 `Relative_Error = abs(Residual) / max(abs(Expected), denominator_floor)`
 
-### Status Propagation
-Individual parameter statuses map to an overarching `DigitalTwinStatus`:
-- If ANY parameter is `CRITICAL`: `DigitalTwinStatus.DEVIATION_DETECTED` (Confidence drops to 0.3).
-- If ANY parameter is `WARNING`: `DigitalTwinStatus.DATA_QUALITY_DEGRADED` (Confidence drops to 0.7).
-- If all are `GOOD` but sensor data was degraded: `DATA_QUALITY_DEGRADED` (Confidence drops to 0.85).
-- If all are `GOOD` and sensors are valid: `SYNCHRONIZED` (Confidence derived from UKF, nominally 1.0).
+### Status Propagation & Confidence Semantics
+Individual parameter statuses map to an overarching `DigitalTwinStatus`.
+Confidence values are strictly deterministic engineering/calibration policy values reflecting the twin's confidence in its assessment of the engine state. They are NOT probabilities and do NOT imply ML/stochastic probability of engine health.
+
+Aggregate priority is explicitly evaluated in this order to prevent conflating missing data with physical health:
+
+1. **SYNC/INPUT FAILED** (e.g. `SYNC_FAILED`): Handled prior to residual analysis. Twin cannot evaluate. Confidence `0.0`.
+2. **INSUFFICIENT/INVALID DATA**: If `missing_count + invalid_count > 0` (even if synchronized).
+   - `DigitalTwinStatus.INSUFFICIENT_DATA`
+   - Policy Confidence: `0.0` (Insufficient/invalid residual inputs block assessment. Data prevents meaningful evaluation).
+3. **CRITICAL**: If `criticals_count > 0`.
+   - `DigitalTwinStatus.DEVIATION_DETECTED`
+   - Policy Confidence: `0.3` (Critical physical deviations severely degrade twin confidence).
+4. **WARNING**: If `warnings_count > 0`.
+   - `DigitalTwinStatus.DATA_QUALITY_DEGRADED`
+   - Policy Confidence: `0.85` (Minor physical deviations slightly degrade twin confidence).
+5. **DEGRADED OBSERVATION**: If all are `GOOD` but sensor data was degraded (`DEGRADED_OBSERVATION`).
+   - `DigitalTwinStatus.DATA_QUALITY_DEGRADED`
+   - Policy Confidence: `0.7` (Poor telemetry data quality caps overall confidence).
+6. **SYNCHRONIZED**: Only when all are `GOOD` and sensors are valid.
+   - `DigitalTwinStatus.SYNCHRONIZED`
+   - Policy Confidence: Inherited from UKF estimator (nominally `1.0`).
 
 ## Causal Analyzer Integration
 Residuals are propagated to the Causal Analyzer (`CausalAnalyzer`), which maps deviations onto a physical Directed Acyclic Graph (DAG) to determine if a deviation is a `PRIMARY_DEVIATION` (root cause) or a `PROPAGATED_DEVIATION` (downstream effect).

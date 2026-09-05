@@ -135,23 +135,33 @@ class DigitalTwinEngine:
             warnings = []
             
             # Confidence logic based on residual counts
-            if residuals.criticals_count > 0:
+            # Note: These confidence values (0.3, 0.7, 0.85, 1.0) are strictly deterministic
+            # engineering/calibration policy values reflecting the twin's confidence in its
+            # assessment of the engine state. They are NOT probabilities and do NOT imply
+            # ML/stochastic probability of engine health.
+            if residuals.missing_count + residuals.invalid_count > 0:
+                status = DigitalTwinStatus.INSUFFICIENT_DATA
+                data_quality = DigitalTwinDataQuality.INSUFFICIENT_DATA
+                confidence = 0.0  # Policy: Insufficient/invalid residual inputs block assessment. Confidence drops.
+                warnings = self._generate_warning_events(residuals, causal_res, engine_index)
+            elif residuals.criticals_count > 0:
                 status = DigitalTwinStatus.DEVIATION_DETECTED
                 data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
-                confidence = 0.3
+                confidence = 0.3  # Policy: Critical physical deviations severely degrade twin confidence
                 warnings = self._generate_warning_events(residuals, causal_res, engine_index)
             elif residuals.warnings_count > 0:
                 status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
                 data_quality = DigitalTwinDataQuality.GOOD if sync_result.quality_effect == "GOOD" else DigitalTwinDataQuality.DEGRADED
-                confidence = 0.85
+                confidence = 0.85  # Policy: Minor physical deviations slightly degrade twin confidence
                 warnings = self._generate_warning_events(residuals, causal_res, engine_index)
             elif sync_result.status == "DEGRADED_OBSERVATION":
                 status = DigitalTwinStatus.DATA_QUALITY_DEGRADED
                 data_quality = DigitalTwinDataQuality.DEGRADED
-                confidence = 0.7
+                confidence = 0.7  # Policy: Poor telemetry data quality caps overall confidence
             else:
                 status = DigitalTwinStatus.SYNCHRONIZED
                 data_quality = DigitalTwinDataQuality.GOOD
+                # Policy: Nominal state. Inherit estimator confidence (default 1.0)
                 confidence = estimated_state.estimation_confidence if hasattr(estimated_state, 'estimation_confidence') else 1.0
 
         # 8. Package Master Digital Twin State
@@ -193,7 +203,8 @@ class DigitalTwinEngine:
                     "engine_index": engine_index,
                     "parameter": param.upper(),
                     "expected": res.expected,
-                    "observed": res.observed,
+                    "actual": res.actual,
+                    "actual_source": res.actual_source,
                     "residual": res.residual,
                     "relative_error": res.relative_error,
                     "unit": res.unit,

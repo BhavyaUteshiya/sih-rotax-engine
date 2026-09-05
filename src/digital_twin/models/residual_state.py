@@ -103,7 +103,7 @@ class ParameterResidual:
         if denom < denominator_floor:
             denom = denominator_floor
 
-        rel_err = res / denom
+        rel_err = abs(res) / denom
 
         status = "GOOD"
         
@@ -206,6 +206,33 @@ class ResidualState:
                 count += 1
         return count
 
+    @property
+    def missing_count(self) -> int:
+        """Returns the number of residuals that are MISSING (ignoring genuinely unmodeled parameters)."""
+        count = 0
+        for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(self, attr_name)
+            # Only count as missing if it was actually expected by the physics model
+            if res is not None and res.status == "MISSING" and getattr(res, "expected", None) is not None:
+                count += 1
+        return count
+
+    @property
+    def invalid_count(self) -> int:
+        """Returns the number of residuals that are INVALID_NAN or INVALID_INF."""
+        count = 0
+        for attr_name in ["rpm", "map_bar", "turbo_rpm", "airflow_kg_h", "fuel_flow_kg_h",
+                          "afr", "combustion_energy", "combustion_efficiency", "indicated_power_kw",
+                          "torque_n_m", "egt_c", "cht_c", "coolant_temp_c", "oil_temp_c",
+                          "oil_pressure_bar", "turbo_boost_bar", "gearbox_rpm", "propeller_load_nm", "thrust_n"]:
+            res = getattr(self, attr_name)
+            if res is not None and res.status in ("INVALID_NAN", "INVALID_INF"):
+                count += 1
+        return count
+
     def to_dict(self) -> Dict[str, Any]:
         """Serializes ResidualState to dictionary."""
         residuals_dict = {}
@@ -223,5 +250,7 @@ class ResidualState:
             "engine_id": self.engine_id,
             "residuals": residuals_dict,
             "warnings_count": self.warnings_count,
-            "criticals_count": self.criticals_count
+            "criticals_count": self.criticals_count,
+            "missing_count": self.missing_count,
+            "invalid_count": self.invalid_count
         }

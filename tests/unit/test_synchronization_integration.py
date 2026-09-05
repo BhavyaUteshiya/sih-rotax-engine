@@ -6,8 +6,16 @@ from src.digital_twin.models.observed_state import ObservedState
 from src.digital_twin.models.twin_state import DigitalTwinStatus, DigitalTwinDataQuality
 from src.digital_twin.models.synchronization_result import SynchronizationStatus
 
-def test_engine_isolation_and_sequence_tracking():
+@patch('src.digital_twin.services.twin_engine.ResidualAnalyzer.analyze')
+def test_engine_isolation_and_sequence_tracking(mock_analyze):
     """Verify E1 and E2 sequence histories are isolated and rejected observations don't corrupt them."""
+    mock_res_val = MagicMock()
+    mock_res_val.warnings_count = 0
+    mock_res_val.criticals_count = 0
+    mock_res_val.missing_count = 0
+    mock_res_val.invalid_count = 0
+    mock_analyze.return_value = mock_res_val
+
     engine = DigitalTwinEngine()
     context = OperatingContext(throttle_position=0.8)
     
@@ -64,6 +72,8 @@ def test_downstream_bypass_on_sync_failure(mock_causal, mock_residual):
     mock_res_val = MagicMock()
     mock_res_val.warnings_count = 0
     mock_res_val.criticals_count = 0
+    mock_res_val.missing_count = 0
+    mock_res_val.invalid_count = 0
     mock_residual.return_value = mock_res_val
     
     state_good = engine.process_step(context, 1.0, obs_good, engine_index=1, timestamp=13.0)
