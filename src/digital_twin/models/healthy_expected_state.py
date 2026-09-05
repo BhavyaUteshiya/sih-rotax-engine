@@ -32,13 +32,13 @@ class HealthyExpectedState:
     torque_n_m: float = 0.0
     egt_c: float = 15.0
     cht_c: float = 15.0
-    coolant_temp_c: float = 15.0
+    coolant_temp_c: Optional[float] = None
     oil_temp_c: float = 15.0
-    oil_pressure_bar: float = 0.0
+    oil_pressure_bar: Optional[float] = None
     turbo_boost_bar: float = 0.0
     gearbox_rpm: float = 0.0
-    propeller_load_nm: float = 0.0
-    thrust_n: float = 0.0
+    propeller_load_nm: Optional[float] = None
+    thrust_n: Optional[float] = None
 
     # Defines the confidence level of the physical reference model output (0.0 to 1.0).
     # Confidence degrades if inputs are out of bounds or during extreme transient maneuvers.
@@ -63,12 +63,12 @@ class HealthyExpectedState:
             "torque_n_m": round(self.torque_n_m, 2),
             "egt_c": round(self.egt_c, 2),
             "cht_c": round(self.cht_c, 2),
-            "coolant_temp_c": round(self.coolant_temp_c, 2),
+            "coolant_temp_c": round(self.coolant_temp_c, 2) if self.coolant_temp_c is not None else None,
             "oil_temp_c": round(self.oil_temp_c, 2),
-            "oil_pressure_bar": round(self.oil_pressure_bar, 4),
+            "oil_pressure_bar": round(self.oil_pressure_bar, 4) if self.oil_pressure_bar is not None else None,
             "turbo_boost_bar": round(self.turbo_boost_bar, 4),
             "gearbox_rpm": round(self.gearbox_rpm, 2),
-            "propeller_load_nm": round(self.propeller_load_nm, 2),
-            "thrust_n": round(self.thrust_n, 2),
+            "propeller_load_nm": round(self.propeller_load_nm, 2) if self.propeller_load_nm is not None else None,
+            "thrust_n": round(self.thrust_n, 2) if self.thrust_n is not None else None,
             "model_confidence": self.model_confidence,
         }

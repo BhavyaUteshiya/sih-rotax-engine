@@ -74,3 +74,30 @@ def test_twin_engine_data_quality_mapping():
     assert state.data_quality in (DigitalTwinDataQuality.GOOD, DigitalTwinDataQuality.DEGRADED)
     assert state.status in (DigitalTwinStatus.SYNCHRONIZED, DigitalTwinStatus.DATA_QUALITY_DEGRADED)
     assert state.confidence == 1.0
+
+def test_get_causal_analysis_preserves_result():
+    engine = DigitalTwinEngine()
+    context = OperatingContext(throttle_position=0.5)
+
+    # 1. Trigger a successful run
+    observed_good = ObservedState(
+        engine_id="engine_1",
+        data_quality="GOOD",
+        sequence_number=10
+    )
+    engine.process_step(context, 1.0, observed_good)
+    
+    # 2. Get the causal analysis
+    causal_1 = engine.get_causal_analysis(1)
+    
+    # 3. Trigger a failed run (INVALID sync)
+    observed_invalid = ObservedState(
+        engine_id="engine_1",
+        data_quality="INVALID",
+        sequence_number=11
+    )
+    engine.process_step(context, 1.0, observed_invalid)
+    
+    # 4. Verify the engine preserved the last successful causal analysis
+    causal_2 = engine.get_causal_analysis(1)
+    assert causal_1 == causal_2

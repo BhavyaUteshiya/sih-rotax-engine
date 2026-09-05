@@ -39,6 +39,7 @@ class DigitalTwinEngine:
         self.last_sequence: Dict[int, int] = {1: -1, 2: -1}
         self.history_records: List[Dict[str, Any]] = []
         self.active_warnings: List[Dict[str, Any]] = []
+        self.last_causal_analysis: Dict[int, Dict[str, Any]] = {1: {}, 2: {}}
 
     def process_step(
         self,
@@ -86,7 +87,7 @@ class DigitalTwinEngine:
         if not sync_result.is_synchronized:
             # Bypass downstream evaluation if we cannot align the signals deterministically.
             residuals = ResidualState()
-            causal_res = {}
+            causal_res = self.last_causal_analysis.get(engine_index, {})
             
             # Map quality based on sync result
             if sync_result.quality_effect == "INVALID":
@@ -112,6 +113,7 @@ class DigitalTwinEngine:
     
             # 6. Perform Causal Deviation Analysis
             causal_res = self.causal_analyzer.analyze_causal_chain(residuals, engine_index=engine_index)
+            self.last_causal_analysis[engine_index] = causal_res
     
             # 7. Determine Twin Lifecycle Status based on Analysis & Sync Result
             if sync_result.status == "DEGRADED_OBSERVATION" or residuals.warnings_count > 0:
@@ -203,9 +205,7 @@ class DigitalTwinEngine:
 
     def get_causal_analysis(self, engine_index: int = 1) -> Dict[str, Any]:
         """Retrieves physical causal chain graph status for engine_index."""
-        st = self.twin_states.get(engine_index)
-        # Causal deviation graph analysis is reserved for Phase 2D State Estimation.
-        return {}
+        return self.last_causal_analysis.get(engine_index, {})
 
     def get_warnings(self) -> List[Dict[str, Any]]:
         """Retrieves active backend warning events across all engines."""

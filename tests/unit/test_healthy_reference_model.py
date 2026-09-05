@@ -44,3 +44,22 @@ def test_healthy_reference_model_invalid_dt():
 
     with pytest.raises(ValueError, match="Timestep dt must be strictly positive."):
         model.step(context, dt=-0.1)
+
+def test_healthy_reference_model_no_fabricated_values():
+    model = HealthyReferenceModel(engine_index=1)
+    context = OperatingContext(
+        altitude_m=0.0,
+        ambient_temp_c=15.0,
+        ambient_pressure_kpa=101.325,
+        relative_humidity_pct=0.0,
+        throttle_position=1.0, 
+        airspeed_m_s=0.0,
+        fuel_pressure_pa=250000.0,
+        starter_engaged=False
+    )
+    state = model.step(context, dt=0.1)
+    
+    # Phase 1 Simulator doesn't provide these, so they must be None, not fabricated 0.0s
+    assert state.coolant_temp_c is None
+    assert state.oil_pressure_bar is None
+    assert state.combustion_energy is None

@@ -44,8 +44,8 @@ class ExpectedBehaviorModel:
 
         # Propeller handling
         prop = propeller_state if propeller_state is not None else getattr(sim_state, "propeller", None)
-        thrust_val = getattr(prop, "thrust_n", 0.0)
-        prop_load_val = getattr(prop, "aerodynamic_torque_nm", 0.0)
+        thrust_val = getattr(prop, "thrust_n", None)
+        prop_load_val = getattr(prop, "aerodynamic_torque_nm", None)
 
         # Engine Dynamics & Basic params
         rpm_val = getattr(engine_dyn, "engine_rpm", 0.0)
@@ -79,17 +79,15 @@ class ExpectedBehaviorModel:
         cht_val = getattr(thermal, "cht_temperature_c", 15.0)
         oil_temp_val = getattr(thermal, "oil_temperature_c", 15.0)
 
-        # Not provided by Phase 1 simulator; explicit contract as unmodeled/0.0
-        oil_press_val = 0.0
-        coolant_temp_val = 0.0
+        # Not provided by Phase 1 simulator; explicit contract as unmodeled
+        oil_press_val = None
+        coolant_temp_val = None
 
         # Environment / Derived
         amb_press_pa = getattr(atm, "pressure_pa", 101325.0)
         turbo_boost_val = max(0.0, map_val - (amb_press_pa / 100000.0))
 
-        if prop_load_val == 0.0 and torque_val > 0.0:
-            # Fallback if propeller didn't supply load
-            prop_load_val = torque_val * 2.4286
+
 
         confidence_val = 1.0 if sim_state is not None else 0.0
 
